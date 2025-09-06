@@ -6,7 +6,10 @@
   "scripts": {
     "dev": "turbo run dev",
     "build": "turbo run build",
-    "lint": "turbo run lint"
+    "lint": "turbo run lint",
+    "db:drop": "turbo run db:drop",
+    "migration:generate": "turbo run migration:generate",
+    "migration:run": "turbo run migration:run"
   },
   "keywords": [],
   "author": "",

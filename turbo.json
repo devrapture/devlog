@@ -8,6 +8,15 @@
 		"dev": {
 			"cache": false,
 			"persistent": true
+		},
+		"db:drop": {
+			"cache": false
+		},
+		"migration:generate": {
+			"cache": false
+		},
+		"migration:run": {
+			"cache": false
 		}
 	}
 }

@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { validate } from 'env.validation';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -19,10 +20,14 @@ import { validate } from 'env.validation';
         password: configService.get('DATABASE_PASSWORD'),
         database: configService.get('DATABASE_NAME'),
         autoLoadEntities: true,
-        synchronize: true,
+        synchronize: false,
+        migrationsTableName: 'migrations',
+        entities: [__dirname + '/**/*.entity{.ts,.js}'],
+        migrations: [__dirname + '/migrations/**/*.ts'],
       }),
       inject: [ConfigService],
     }),
+    AuthModule,
   ],
 })
 export class AppModule {}
