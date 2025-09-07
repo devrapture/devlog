@@ -29,15 +29,14 @@ export class UsersService {
         id: userId,
       },
     });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
     return user;
   }
 
   async updateUser(userId: string, updateUserDto: UpdateUserDto) {
     const user = await this.findById(userId);
-
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
 
     if (user.id !== userId)
       throw new UnauthorizedException('Not authorized to update this user');
@@ -48,6 +47,16 @@ export class UsersService {
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, ...safeUser } = updatedUser;
+
+    return {
+      user: safeUser,
+    };
+  }
+
+  async getUserProfile(userId: string) {
+    const user = await this.findById(userId);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password, ...safeUser } = user;
 
     return {
       user: safeUser,
