@@ -59,6 +59,32 @@ export class AuthController {
     summary: 'Sign in a user',
   })
   @ApiResponse({
+    status: 200,
+    description: 'Login successful',
+    schema: {
+      example: {
+        success: true,
+        message: 'Login successful',
+        data: {
+          user: {
+            id: 'b5c3c099-9035-49c5-8321-6a0c3b1a75ee',
+            role: 'user',
+            email: 'test1@test.com',
+            avatar: null,
+            bio: null,
+            displayName: null,
+            isActive: true,
+            lastLoginAt: null,
+            createdAt: '2025-09-06T18:30:09.877Z',
+            updatedAt: '2025-09-06T18:30:09.877Z',
+          },
+          accessToken:
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c',
+        },
+      },
+    },
+  })
+  @ApiResponse({
     status: 401,
     description: 'Invalid Credentials',
     schema: {
@@ -73,3 +99,5 @@ export class AuthController {
     return this.authService.loginUser(loginDto);
   }
 }
+
+// eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzODc4NjlkMS1iNTBlLTQ2M2MtYWVmMi0zNzM3Mjc2ZDM4MDIiLCJkaXNwbGF5TmFtZSI6bnVsbCwiZW1haWwiOiJ0ZXN0QGdtYWlsLmNvbSIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzU3MjM5NDE3LCJleHAiOjE3NTczMjU4MTd9.WWV3EbQyozhUI2Xge26Mf8mQ2JV-DuFY99-OvJ1ZTBo

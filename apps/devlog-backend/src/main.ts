@@ -34,6 +34,16 @@ async function bootstrap() {
     )
     .setVersion('1.0')
     .addTag('DevLog')
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        in: 'header',
+        description: 'Paste your access token here',
+      },
+      'access-token',
+    )
     .build();
 
   const options: SwaggerCustomOptions = {
