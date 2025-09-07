@@ -17,11 +17,8 @@ class EnvironmentVariables {
   @IsString()
   DATABASE_NAME: string;
 
-  // @IsString()
-  // DATABASE_URL: string
-
-  // @IsString()
-  // JWT_SECRET: string
+  @IsString()
+  JWT_SECRET: string;
 }
 
 export const validate = (config: Record<string, unknown>) => {

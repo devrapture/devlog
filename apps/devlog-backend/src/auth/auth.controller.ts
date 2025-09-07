@@ -16,10 +16,11 @@ export class AuthController {
   @HttpCode(HttpStatus.CREATED)
   @ApiResponse({
     status: 201,
+    description: 'user account created successfully',
     schema: {
       example: {
         success: true,
-        message: 'user account created successfully',
+        message: 'User account created successfully',
         data: {
           user: {
             id: 'b5c3c099-9035-49c5-8321-6a0c3b1a75ee',
@@ -37,7 +38,38 @@ export class AuthController {
       },
     },
   })
+  @ApiResponse({
+    status: 409,
+    description: 'Email already exists',
+    schema: {
+      example: {
+        success: false,
+        message: 'Email already exists',
+        data: null,
+      },
+    },
+  })
   createUser(@Body() createUserDto: CreateUserDto) {
     return this.authService.createUser(createUserDto);
+  }
+
+  @Post('signin')
+  @ResponseMessage('Login successful')
+  @ApiOperation({
+    summary: 'Sign in a user',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Invalid Credentials',
+    schema: {
+      example: {
+        success: false,
+        statusCode: 401,
+        message: 'Invalid Credentials',
+      },
+    },
+  })
+  login(@Body() loginDto: CreateUserDto) {
+    return this.authService.loginUser(loginDto);
   }
 }
