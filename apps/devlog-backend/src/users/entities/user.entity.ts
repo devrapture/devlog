@@ -1,3 +1,4 @@
+import { Post } from '../../posts/entities/post.entity';
 import { MediaFile } from '../../file-upload/entities/media-file.entity';
 import {
   Column,
@@ -71,4 +72,7 @@ export class User {
 
   @OneToMany(() => MediaFile, (mediaFile) => mediaFile.uploader)
   mediaFiles: MediaFile[];
+
+  @OneToMany(() => Post, (post) => post.author)
+  posts: Post[];
 }

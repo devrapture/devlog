@@ -1,3 +1,4 @@
+// apps/devlog-backend/src/main.ts
 import { NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
@@ -33,7 +34,11 @@ async function bootstrap() {
       'DevLog API provides a modern blogging backend for developers and content creators',
     )
     .setVersion('1.0')
-    .addTag('DevLog')
+    .addTag('Auth', 'Authentication-related endpoints')
+    .addTag('Users', 'User management endpoints')
+    .addTag('Posts', 'Post management endpoints')
+    .addTag('Categories', 'Category management endpoints')
+    .addTag('Media', 'Media file management endpoints')
     .addBearerAuth(
       {
         type: 'http',
@@ -48,9 +53,15 @@ async function bootstrap() {
 
   const options: SwaggerCustomOptions = {
     useGlobalPrefix: true,
+    jsonDocumentUrl: '/docs/json',
   };
 
-  const documentFactory = () => SwaggerModule.createDocument(app, config);
+  const documentFactory = () =>
+    SwaggerModule.createDocument(app, config, {
+      operationIdFactory: (controllerKey: string, methodKey: string) =>
+        methodKey,
+    });
+
   SwaggerModule.setup('docs', app, documentFactory, options);
   await app.listen(process.env.PORT ?? 8080);
 }

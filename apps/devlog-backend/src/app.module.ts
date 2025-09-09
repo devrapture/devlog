@@ -5,6 +5,8 @@ import { validate } from 'env.validation';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { FileUploadModule } from './file-upload/file-upload.module';
+import { PostsModule } from './posts/posts.module';
+import { CategoriesModule } from './categories/categories.module';
 
 @Module({
   imports: [
@@ -32,6 +34,8 @@ import { FileUploadModule } from './file-upload/file-upload.module';
     AuthModule,
     UsersModule,
     FileUploadModule,
+    PostsModule,
+    CategoriesModule,
   ],
 })
 export class AppModule {}
