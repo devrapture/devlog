@@ -9,7 +9,6 @@ import { Post } from './entities/post.entity';
 import { CreatePostDto } from './dto/create-post.dto';
 import { Category } from '../categories/entities/category.entity';
 import { User } from 'src/users/entities/user.entity';
-import { generateSlug } from 'src/common/utils/slug.util';
 
 @Injectable()
 export class PostsService {
@@ -32,76 +31,59 @@ export class PostsService {
   }
 
   async updateDraft(userId: string, id: string, updateDraftDto: CreatePostDto) {
-    const draft = await this.postRepository.findOne({
+    const existingDraft = await this.postRepository.findOne({
       where: {
         id,
       },
+      relations: ['author', 'categories'],
+      select: {
+        author: {
+          id: true,
+          displayName: true,
+          avatar: true,
+        },
+      },
     });
 
-    if (!draft) throw new NotFoundException('Draft not found');
+    if (!existingDraft) throw new NotFoundException('Draft not found');
 
-    if (draft.author.id !== userId)
+    if (existingDraft?.author?.id !== userId)
       throw new UnauthorizedException('Not authorized to update this draft');
 
-    let draftCategories: string[] | Category[] | undefined =
+    let categoriesToSet: string[] | Category[] | undefined =
       updateDraftDto.categories;
     if (updateDraftDto.categories?.length) {
-      draftCategories = await this.categoryRepository.find({
+      categoriesToSet = await this.categoryRepository.find({
         where: {
-          name: In(updateDraftDto.categories),
+          id: In(updateDraftDto.categories),
         },
       });
 
-      if (draftCategories.length !== updateDraftDto.categories.length)
+      if (categoriesToSet.length !== updateDraftDto.categories.length)
         throw new NotFoundException('One or more categories not found');
-
-      if (updateDraftDto.title) {
-        const slug = generateSlug(updateDraftDto.title);
-      }
-
-      const draft = this.postRepository.create({
-        ...updateDraftDto,
-        categories: draftCategories,
-      });
     }
 
-    // If categories were provided in the DTO, ensure all of them were found.
-    // If not, throw a NotFoundException.
-    // if (
-    //   categoriesToFind.length > 0 &&
-    //   draftCategories.length !== categoriesToFind.length
-    // ) {
-    //   throw new NotFoundException('One or more categories not found');
-    // }
+    // Update only provided fields
+    const updateFields: Partial<Post> = {};
+    for (const key in updateDraftDto) {
+      if (updateDraftDto[key] !== undefined && key !== 'categories') {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        updateFields[key] = updateDraftDto[key];
+      }
+    }
 
-    // Update the draft's properties with the new values from the DTO
-    // draft.title = updateDraftDto.title;
-    // draft.body = updateDraftDto.body;
-    // draft.coverImage = updateDraftDto.coverImage;
-    // draft.categories = draftCategories; // Assign the found category entities
+    // Apply updates to the existing draft
+    Object.assign(existingDraft, updateFields);
 
-    // // Save the updated draft to the database
-    // const updatedDraft = await this.postRepository.save(draft);
+    // Explicitly set categories if provided
+    if (categoriesToSet !== undefined) {
+      existingDraft.categories = categoriesToSet as Category[];
+    }
 
-    // Return the updated draft
-    // return { draft: updatedDraft };
+    const savedDraft = await this.postRepository.save(existingDraft);
+
+    return {
+      draft: savedDraft,
+    };
   }
-
-  //   async createPost(createPostDto: CreatePostDto) {
-  //     const existingCategories = await this.categoryRepository.find({
-  //       where: {
-  //         name: In(createPostDto.categories),
-  //       },
-  //     });
-
-  //     if (existingCategories.length !== createPostDto.categories.length) throw new NotFoundException('Category not found');
-  //     const newPost = this.postRepository.create({
-  //       title: createPostDto.title,
-  //       body: createPostDto.body,
-  //       coverImage: createPostDto.coverImage,
-  //     });
-  //     return {
-  //       post: createPostDto,
-  //     };
-  //   }
 }

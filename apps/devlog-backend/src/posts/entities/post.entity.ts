@@ -4,6 +4,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinTable,
   ManyToMany,
   ManyToOne,
   PrimaryGeneratedColumn,
@@ -75,6 +76,7 @@ export class Post {
   author: User;
 
   @ManyToMany(() => Category, (category) => category.posts)
+  @JoinTable()
   categories: Category[];
 
   @CreateDateColumn()
