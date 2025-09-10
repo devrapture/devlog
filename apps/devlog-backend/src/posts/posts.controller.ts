@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   Param,
   ParseUUIDPipe,
   Patch,
@@ -87,5 +88,28 @@ export class PostsController {
     @Body() updateDraftDto: CreatePostDto,
   ) {
     return this.postsService.updateDraft(userId, id, updateDraftDto);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('access-token')
+  @Get('draft')
+  @ApiOperation({
+    summary: 'Get all drafts by user',
+  })
+  getAllUserDraft(@GetUser('id') userId: string) {
+    return this.postsService.getAllDraft(userId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('access-token')
+  @Get('draft/:id')
+  @ApiOperation({
+    summary: 'Get a user draft by id',
+  })
+  getUserDraftById(
+    @GetUser('id') userId: string,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.postsService.getUserDraftById(userId, id);
   }
 }

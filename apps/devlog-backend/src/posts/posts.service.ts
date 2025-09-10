@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
-import { Post } from './entities/post.entity';
+import { Post, PostStatus } from './entities/post.entity';
 import { CreatePostDto } from './dto/create-post.dto';
 import { Category } from '../categories/entities/category.entity';
 import { User } from 'src/users/entities/user.entity';
@@ -85,5 +85,32 @@ export class PostsService {
     return {
       draft: savedDraft,
     };
+  }
+
+  async getAllDraft(userId: string) {
+    return await this.postRepository.find({
+      where: {
+        author: {
+          id: userId,
+        },
+        status: PostStatus.DRAFT,
+      },
+    });
+  }
+
+  async getUserDraftById(userId: string, draftId: string) {
+    const userDraft =  await this.postRepository.findOne({
+      where: {
+        id: draftId,
+        author: {
+          id: userId,
+        },
+        status: PostStatus.DRAFT,
+      },
+    });
+    if (!userDraft) {
+      throw new NotFoundException('Draft not found');
+    }
+    return userDraft;
   }
 }
