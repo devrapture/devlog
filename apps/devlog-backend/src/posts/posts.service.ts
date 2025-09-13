@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -9,6 +10,10 @@ import { Post, PostStatus } from './entities/post.entity';
 import { CreatePostDto } from './dto/create-post.dto';
 import { Category } from '../categories/entities/category.entity';
 import { User } from 'src/users/entities/user.entity';
+import { CreatePublishPostDto } from './dto/publish-post.dto';
+import { generateSlug } from 'src/common/utils/slug.util';
+import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
+import { PostQueryDto } from './dto/post-query.dto';
 
 @Injectable()
 export class PostsService {
@@ -50,6 +55,8 @@ export class PostsService {
     if (existingDraft?.author?.id !== userId)
       throw new UnauthorizedException('Not authorized to update this draft');
 
+    if (existingDraft.status !== PostStatus.DRAFT)
+      throw new BadRequestException('Draft is already published');
     let categoriesToSet: string[] | Category[] | undefined =
       updateDraftDto.categories;
     if (updateDraftDto.categories?.length) {
@@ -87,19 +94,36 @@ export class PostsService {
     };
   }
 
-  async getAllDraft(userId: string) {
-    return await this.postRepository.find({
-      where: {
-        author: {
-          id: userId,
-        },
-        status: PostStatus.DRAFT,
+  async getAllDraft(userId: string, query: PaginationQueryDto) {
+    const { page = 1, limit = 10 } = query;
+
+    const skip = (page - 1) * limit;
+    const queryBuilder = this.postRepository
+      .createQueryBuilder('post')
+      .leftJoinAndSelect('post.categories', 'category')
+      .andWhere('post.authorId = :userId', { userId })
+      .andWhere('post.status = :status', { status: PostStatus.DRAFT })
+      .orderBy('post.createdAt', 'DESC')
+      .skip(skip)
+      .take(limit);
+    const [items, totalItems] = await queryBuilder.getManyAndCount();
+    const totalPages = Math.ceil(totalItems / limit);
+    const res = {
+      items,
+      meta: {
+        currentPage: page,
+        itemsPerPage: limit,
+        totalItems,
+        totalPages,
+        hasPreviousPage: page > 1,
+        hasNextPage: page < totalPages,
       },
-    });
+    };
+    return res;
   }
 
   async getUserDraftById(userId: string, draftId: string) {
-    const userDraft =  await this.postRepository.findOne({
+    const userDraft = await this.postRepository.findOne({
       where: {
         id: draftId,
         author: {
@@ -111,6 +135,202 @@ export class PostsService {
     if (!userDraft) {
       throw new NotFoundException('Draft not found');
     }
-    return userDraft;
+    return {
+      draft: userDraft,
+    };
+  }
+
+  async publishPost(
+    userId,
+    CreatePublishPostDto: CreatePublishPostDto,
+    draftId: string,
+  ) {
+    const existingDraft = await this.postRepository.findOne({
+      where: {
+        id: draftId,
+      },
+      relations: ['author', 'categories'],
+      select: {
+        author: {
+          id: true,
+          displayName: true,
+          avatar: true,
+        },
+      },
+    });
+
+    if (!existingDraft) throw new NotFoundException('Draft not found');
+
+    if (existingDraft?.author?.id !== userId)
+      throw new UnauthorizedException('Not authorized to update this draft');
+
+    let categoriesToSet: string[] | Category[] | undefined =
+      CreatePublishPostDto.categories;
+    if (CreatePublishPostDto.categories?.length) {
+      categoriesToSet = await this.categoryRepository.find({
+        where: {
+          id: In(CreatePublishPostDto.categories),
+        },
+      });
+
+      if (categoriesToSet.length !== CreatePublishPostDto.categories.length)
+        throw new NotFoundException('One or more categories not found');
+    }
+
+    existingDraft.categories = categoriesToSet as Category[];
+    existingDraft.slug = generateSlug(CreatePublishPostDto.title);
+    existingDraft.status = PostStatus.PUBLISHED;
+    existingDraft.publishedAt = new Date();
+
+    return await this.postRepository.save(existingDraft);
+  }
+
+  async publishExistingPost(userId: string, draftId: string) {
+    const existingDraft = await this.postRepository.findOne({
+      where: {
+        id: draftId,
+      },
+      relations: ['author', 'categories'],
+      select: {
+        author: {
+          id: true,
+          displayName: true,
+          avatar: true,
+        },
+      },
+    });
+
+    if (!existingDraft) throw new NotFoundException('Draft not found');
+
+    if (existingDraft?.author?.id !== userId)
+      throw new UnauthorizedException('Not authorized to update this draft');
+
+    if (
+      !existingDraft.title ||
+      !existingDraft.body ||
+      !existingDraft.coverImage ||
+      !existingDraft.categories.length
+    )
+      throw new BadRequestException('Missing required fields');
+
+    existingDraft.slug = generateSlug(existingDraft.title);
+    existingDraft.status = PostStatus.PUBLISHED;
+    existingDraft.publishedAt = new Date();
+
+    return await this.postRepository.save(existingDraft);
+  }
+
+  async revertToDraft(userId: string, draftId: string) {
+    const existingDraft = await this.postRepository.findOne({
+      where: {
+        id: draftId,
+      },
+      relations: ['author', 'categories'],
+      select: {
+        author: {
+          id: true,
+          displayName: true,
+          avatar: true,
+        },
+      },
+    });
+
+    if (!existingDraft) throw new NotFoundException('Draft not found');
+
+    if (existingDraft?.author?.id !== userId)
+      throw new UnauthorizedException('Not authorized to update this draft');
+
+    if (existingDraft.status === PostStatus.DRAFT)
+      throw new BadRequestException('Draft is already published');
+
+    existingDraft.status = PostStatus.DRAFT;
+
+    return await this.postRepository.save(existingDraft);
+  }
+
+  async getAllPosts(postQueryDto: PostQueryDto) {
+    const { page = 1, limit = 10, category, search } = postQueryDto;
+    const skip = (page - 1) * limit;
+    const queryBuilder = this.postRepository
+      .createQueryBuilder('post')
+      .leftJoinAndSelect('post.categories', 'categories')
+      .leftJoin('post.author', 'author')
+      .addSelect(['author.id', 'author.displayName', 'author.avatar'])
+      .orderBy('post.createdAt', 'DESC')
+      .where('post.status = :status', { status: PostStatus.PUBLISHED })
+      .limit(limit)
+      .skip(skip);
+
+    if (category && category.length > 0) {
+      queryBuilder.andWhere('LOWER(categories.name) IN (:...categories)', {
+        categories: category,
+      });
+    }
+
+    if (search) {
+      queryBuilder.andWhere('LOWER(post.title) LIKE LOWER(:search)', {
+        search: `%${search}%`,
+      });
+    }
+
+    const [items, totalItems] = await queryBuilder.getManyAndCount();
+    const totalPages = Math.ceil(totalItems / limit);
+    const res = {
+      items,
+      meta: {
+        currentPage: page,
+        itemsPerPage: limit,
+        totalItems,
+        totalPages,
+        hasPreviousPage: page > 1,
+        hasNextPage: page < totalPages,
+      },
+    };
+    return res;
+  }
+
+  async getCurrentUserPosts(userId: string, postQueryDto: PostQueryDto) {
+    const { page = 1, limit = 10, category, search, status } = postQueryDto;
+    const skip = (page - 1) * limit;
+    const queryBuilder = this.postRepository
+      .createQueryBuilder('post')
+      .leftJoinAndSelect('post.categories', 'categories')
+      .leftJoin('post.author', 'author')
+      .andWhere('post.authorId = :userId', { userId })
+      .addSelect(['author.id', 'author.displayName', 'author.avatar'])
+      .orderBy('post.createdAt', 'DESC')
+      .skip(skip)
+      .take(limit);
+
+    if (category && category.length > 0) {
+      queryBuilder.andWhere('LOWER(categories.name) IN (:...categories)', {
+        categories: category,
+      });
+    }
+
+    if (status) {
+      queryBuilder.andWhere('post.status = :status', { status });
+    }
+
+    if (search) {
+      queryBuilder.andWhere('LOWER(post.title) LIKE LOWER(:search)', {
+        search: `%${search}%`,
+      });
+    }
+
+    const [items, totalItems] = await queryBuilder.getManyAndCount();
+    const totalPages = Math.ceil(totalItems / limit);
+    const res = {
+      items,
+      meta: {
+        currentPage: page,
+        itemsPerPage: limit,
+        totalItems,
+        totalPages,
+        hasPreviousPage: page > 1,
+        hasNextPage: page < totalPages,
+      },
+    };
+    return res;
   }
 }

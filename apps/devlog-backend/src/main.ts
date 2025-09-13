@@ -54,6 +54,9 @@ async function bootstrap() {
   const options: SwaggerCustomOptions = {
     useGlobalPrefix: true,
     jsonDocumentUrl: '/docs/json',
+    swaggerOptions: {
+      persistAuthorization: true,
+    },
   };
 
   const documentFactory = () =>
