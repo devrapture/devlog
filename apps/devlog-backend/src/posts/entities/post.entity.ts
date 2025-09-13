@@ -4,6 +4,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   JoinTable,
   ManyToMany,
   ManyToOne,
@@ -17,6 +18,10 @@ export enum PostStatus {
 }
 
 @Entity()
+@Index('idx_post_authorId', ['author'])
+@Index('idx_post_status', ['status'])
+@Index('idx_post_createdAt', ['createdAt'])
+@Index('idx_post_title', ['title'])
 export class Post {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -53,7 +58,7 @@ export class Post {
   slug: string;
 
   @Column({
-    type: 'time with time zone',
+    type: 'timestamp with time zone',
     nullable: true,
   })
   publishedAt: Date;

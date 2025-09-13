@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpStatus,
   Param,
@@ -8,12 +9,12 @@ import {
   Patch,
   Post,
   Query,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { CreatePostDto } from './dto/create-post.dto';
 import { PostsService } from './posts.service';
-import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { ResponseMessage } from 'src/common/decorators/response-message.decorator';
 import { GetUser } from 'src/auth/decorator/user.decorator';
 import { User } from 'src/users/entities/user.entity';
@@ -30,6 +31,7 @@ import {
   PublishResponseDtoWithPagination,
 } from './dto/publish-response.dto';
 import { PostQueryDto } from './dto/post-query.dto';
+import type { Request } from 'express';
 
 @Controller('posts')
 export class PostsController {
@@ -45,18 +47,104 @@ export class PostsController {
 
   @UseGuards(JwtAuthGuard)
   @ResponseMessage('Draft updated successfully')
-  @Patch('draft/:id')
+  @Patch('draft/:draftId')
   @ApiDraftEndpoint('Update a draft post')
   updateDraft(
     @GetUser('id') userId: string,
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('draftId', ParseUUIDPipe) draftId: string,
     @Body() updateDraftDto: CreatePostDto,
   ) {
-    return this.postsService.updateDraft(userId, id, updateDraftDto);
+    return this.postsService.updateDraft(userId, draftId, updateDraftDto);
   }
 
   @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth('access-token')
+  @Get('draft/:draftId')
+  @ApiDraftEndpoint('Get a user draft by id')
+  getUserDraftById(
+    @GetUser('id') userId: string,
+    @Param('draftId', ParseUUIDPipe) draftId: string,
+  ) {
+    return this.postsService.getUserDraftById(userId, draftId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @ResponseMessage('Post published successfully')
+  @Patch('publish/:draftId')
+  @ApiAuthenticatedEndpoint(
+    'Publish a draft post with updated data',
+    200,
+    PublishResponseDto,
+  )
+  publishPost(
+    @GetUser('id') userId: string,
+    @Body() CreatePublishPostDto: CreatePublishPostDto,
+    @Param('draftId', ParseUUIDPipe) draftId: string,
+  ) {
+    return this.postsService.publishPost(userId, CreatePublishPostDto, draftId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @ResponseMessage('Post published successfully')
+  @Patch('publish-existing/:draftId')
+  @ApiAuthenticatedEndpoint(
+    'Publish an existing draft post',
+    200,
+    PublishResponseDto,
+  )
+  publishExistingPost(
+    @GetUser('id') userId: string,
+    @Param('draftId', ParseUUIDPipe) draftId: string,
+  ) {
+    return this.postsService.publishExistingPost(userId, draftId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @ResponseMessage('Post reverted to draft successfully')
+  @Patch('revert/:postId')
+  @ApiAuthenticatedEndpoint('Revert a post to draft', 200, RevertPublishDto)
+  revertToDraft(
+    @GetUser('id') userId: string,
+    @Param('postId', ParseUUIDPipe) postId: string,
+  ) {
+    return this.postsService.revertToDraft(userId, postId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('like/:postId')
+  @ApiAuthenticatedEndpoint('Like a post', 200, PublishResponseDto)
+  likePost(@Param('postId', ParseUUIDPipe) postId: string) {
+    return this.postsService.likePost(postId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('me/:postId')
+  @ApiAuthenticatedEndpoint(
+    'Get post for the authenticated user by post id',
+    HttpStatus.OK,
+    PublishResponseDtoWithPagination,
+  )
+  getCurrentUserPostsByPostId(
+    @GetUser('id') userId: string,
+    @Param('postId', ParseUUIDPipe) postId: string,
+  ) {
+    return this.postsService.getCurrentUserPostsById(userId, postId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('me')
+  @ApiAuthenticatedEndpoint(
+    'Get all posts for the authenticated user',
+    HttpStatus.OK,
+    PublishResponseDtoWithPagination,
+  )
+  getCurrentUserPosts(
+    @GetUser('id') userId: string,
+    @Query() postQueryDto: PostQueryDto,
+  ) {
+    return this.postsService.getCurrentUserPosts(userId, postQueryDto);
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Get('draft')
   @ApiAuthenticatedEndpoint(
     'Get all drafts by authenticated user',
@@ -71,62 +159,49 @@ export class PostsController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get('draft/:id')
-  @ApiDraftEndpoint('Get a user draft by id')
-  getUserDraftById(
-    @GetUser('id') userId: string,
-    @Param('id', ParseUUIDPipe) id: string,
-  ) {
-    return this.postsService.getUserDraftById(userId, id);
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @ResponseMessage('Post published successfully')
-  @Patch('publish/:id')
+  @Get(':slug')
   @ApiAuthenticatedEndpoint(
-    'Publish a draft post with updated data',
+    'Get post for public view by slug',
     200,
-    PublishResponseDto,
+    PublishResponseDtoWithPagination,
   )
-  publishPost(
-    @GetUser('id') userId: string,
-    @Body() CreatePublishPostDto: CreatePublishPostDto,
-    @Param('id', ParseUUIDPipe) id: string,
-  ) {
-    return this.postsService.publishPost(userId, CreatePublishPostDto, id);
+  getAllPostsByAuthorById(@Param('slug') slug: string, @Req() req: Request) {
+    const ipAddress = req.socket.remoteAddress || 'unknown';
+    const userAgent = req.headers['user-agent'];
+    return this.postsService.getPostBySlug(
+      slug,
+      ipAddress,
+      userAgent,
+      // @ts-expect-error user is not defined
+      req.user,
+    );
   }
 
   @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth('access-token')
-  @ResponseMessage('Post published successfully')
-  @Patch('publish-existing/:id')
-  @ApiAuthenticatedEndpoint(
-    'Publish an existing draft post',
-    200,
-    PublishResponseDto,
-  )
-  publishExistingPost(
+  @Delete(':postId')
+  @ApiAuthenticatedEndpoint('Delete a post', HttpStatus.OK, PublishResponseDto)
+  // @ApiAuthenticatedEndpoint('Delete a post', 200,)
+  deletePost(
     @GetUser('id') userId: string,
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('postId', ParseUUIDPipe) postId: string,
   ) {
-    return this.postsService.publishExistingPost(userId, id);
+    return this.postsService.deletePost(userId, postId);
   }
 
-  @UseGuards(JwtAuthGuard)
-  @ResponseMessage('Post reverted to draft successfully')
-  @Patch('revert/:id')
-  @ApiAuthenticatedEndpoint('Revert a post to draft', 200, RevertPublishDto)
-  revertToDraft(
-    @GetUser('id') userId: string,
-    @Param('id', ParseUUIDPipe) id: string,
+  @Get(':authorId')
+  @ApiUnAuthenticatedEndpoint(
+    'Get all published posts for public view by author',
+    200,
+    PublishResponseDtoWithPagination,
+  )
+  getAllPostsByAuthor(
+    @Param('authorId', ParseUUIDPipe) authorId: string,
+    @Query() paginatedQueryDto: PaginationQueryDto,
   ) {
-    return this.postsService.revertToDraft(userId, id);
+    return this.postsService.getAllPostsByAuthor(authorId, paginatedQueryDto);
   }
 
   @Get()
-  @ApiOperation({
-    summary: 'Get all published posts for public view',
-  })
   @ApiUnAuthenticatedEndpoint(
     'Get all published posts for public view',
     200,
@@ -134,19 +209,5 @@ export class PostsController {
   )
   getAllPosts(@Query() postQueryDto: PostQueryDto) {
     return this.postsService.getAllPosts(postQueryDto);
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Get('me')
-  @ApiUnAuthenticatedEndpoint(
-    'Get all posts for the authenticated user',
-    200,
-    PublishResponseDtoWithPagination,
-  )
-  getCurrentUserPosts(
-    @GetUser('id') userId: string,
-    @Query() postQueryDto: PostQueryDto,
-  ) {
-    return this.postsService.getCurrentUserPosts(userId, postQueryDto);
   }
 }

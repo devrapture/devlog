@@ -14,6 +14,7 @@ import { CreatePublishPostDto } from './dto/publish-post.dto';
 import { generateSlug } from 'src/common/utils/slug.util';
 import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 import { PostQueryDto } from './dto/post-query.dto';
+import { ViewTrackerService } from './view-tracker.service';
 
 @Injectable()
 export class PostsService {
@@ -21,6 +22,8 @@ export class PostsService {
     @InjectRepository(Post) private readonly postRepository: Repository<Post>,
     @InjectRepository(Category)
     private readonly categoryRepository: Repository<Category>,
+    private readonly viewTrackerService: ViewTrackerService,
+    @InjectRepository(User) private readonly userRepository: Repository<User>,
   ) {}
 
   async createDraft(user: User) {
@@ -35,10 +38,14 @@ export class PostsService {
     };
   }
 
-  async updateDraft(userId: string, id: string, updateDraftDto: CreatePostDto) {
+  async updateDraft(
+    userId: string,
+    postId: string,
+    updateDraftDto: CreatePostDto,
+  ) {
     const existingDraft = await this.postRepository.findOne({
       where: {
-        id,
+        id: postId,
       },
       relations: ['author', 'categories'],
       select: {
@@ -213,7 +220,9 @@ export class PostsService {
     )
       throw new BadRequestException('Missing required fields');
 
-    existingDraft.slug = generateSlug(existingDraft.title);
+    if (!existingDraft.slug) {
+      existingDraft.slug = generateSlug(existingDraft.title);
+    }
     existingDraft.status = PostStatus.PUBLISHED;
     existingDraft.publishedAt = new Date();
 
@@ -246,6 +255,27 @@ export class PostsService {
     existingDraft.status = PostStatus.DRAFT;
 
     return await this.postRepository.save(existingDraft);
+  }
+
+  // TODO: fix likes
+  async likePost(postId: string) {
+    const post = await this.postRepository.findOne({
+      where: {
+        id: postId,
+      },
+    });
+
+    if (!post) {
+      throw new NotFoundException('Post not found');
+    }
+
+    post.likes += 1;
+
+    await this.postRepository.save(post);
+
+    return {
+      post,
+    };
   }
 
   async getAllPosts(postQueryDto: PostQueryDto) {
@@ -332,5 +362,148 @@ export class PostsService {
       },
     };
     return res;
+  }
+
+  async getCurrentUserPostsById(userId: string, postId: string) {
+    const post = await this.postRepository.findOne({
+      where: {
+        id: postId,
+        author: {
+          id: userId,
+        },
+      },
+    });
+
+    if (!post) {
+      throw new NotFoundException('Post not found');
+    }
+
+    return {
+      post,
+    };
+  }
+
+  async getAllPostsByAuthor(
+    _authorId: string,
+    paginatedQueryDto: PaginationQueryDto,
+  ) {
+    const authorId = await this.userRepository.findOne({
+      where: {
+        id: _authorId,
+      },
+    });
+
+    if (!authorId) {
+      throw new NotFoundException('Author not found');
+    }
+
+    const { page = 1, limit = 10 } = paginatedQueryDto;
+    const skip = (page - 1) * limit;
+    const queryBuilder = this.postRepository
+      .createQueryBuilder('post')
+      .leftJoin('post.author', 'author')
+      .andWhere('post.authorId = :_authorId', { _authorId })
+      .addSelect(['author.id', 'author.displayName', 'author.avatar'])
+      .skip(skip)
+      .limit(limit);
+
+    const [items, totalItems] = await queryBuilder.getManyAndCount();
+    const totalPages = Math.ceil(totalItems / limit);
+    const res = {
+      items,
+      meta: {
+        currentPage: page,
+        itemsPerPage: limit,
+        totalItems,
+        totalPages,
+        hasPreviousPage: page > 1,
+        hasNextPage: page < totalPages,
+      },
+    };
+    return res;
+  }
+
+  async getPostBySlug(
+    slug: string,
+    ipAddress: string,
+    userAgent?: string,
+    user?: User,
+  ) {
+    console.log('ipAddress', ipAddress);
+    console.log('userAgent', userAgent);
+    console.log('userId', user);
+    const post = await this.postRepository.findOne({
+      where: {
+        slug,
+      },
+      relations: ['author', 'categories'],
+      select: {
+        author: {
+          id: true,
+          displayName: true,
+          avatar: true,
+        },
+      },
+    });
+
+    if (!post) {
+      throw new NotFoundException('Post not found');
+    }
+
+    // TODO: fix unique view tracking
+    const isUniqueView = await this.viewTrackerService.trackUniqueView(
+      post.id,
+      ipAddress,
+      user?.id, // Pass userId if authenticated
+      userAgent,
+    );
+
+    if (isUniqueView) {
+      await this.postRepository.manager.transaction(
+        async (transactionalEntityManager) => {
+          await transactionalEntityManager.increment(
+            Post,
+            { id: post.id },
+            'views',
+            1,
+          );
+          post.views += 1; // Update the in-memory post object
+        },
+      );
+    }
+
+    return {
+      post,
+    };
+  }
+
+  async deletePost(userId: string, postId: string) {
+    const post = await this.postRepository.findOne({
+      where: {
+        id: postId,
+        author: {
+          id: userId,
+        },
+      },
+      relations: ['author'],
+      select: {
+        author: {
+          id: true,
+        },
+      },
+    });
+
+    if (!post) {
+      throw new NotFoundException('Post not found');
+    }
+
+    if (post.author.id !== userId)
+      throw new UnauthorizedException('Not authorized to delete this post');
+
+    await this.postRepository.delete(post.id);
+
+    return {
+      post,
+    };
   }
 }

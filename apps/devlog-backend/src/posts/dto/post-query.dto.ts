@@ -9,7 +9,6 @@ export class PostQueryDto extends PaginationQueryDto {
     required: false,
     type: String,
     description: 'Status of the post',
-    // example: PostStatus.PUBLISHED,
     enum: PostStatus,
   })
   @IsOptional()

@@ -3,12 +3,14 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   ManyToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 
 @Entity()
+@Index('idx_category_name', ['name'])
 export class Category {
   @PrimaryGeneratedColumn('uuid')
   id: string;
