@@ -37,6 +37,7 @@ async function bootstrap() {
     .addTag('Auth', 'Authentication-related endpoints')
     .addTag('Users', 'User management endpoints')
     .addTag('Posts', 'Post management endpoints')
+    .addTag('Likes', 'Like management endpoints')
     .addTag('Categories', 'Category management endpoints')
     .addTag('Media', 'Media file management endpoints')
     .addBearerAuth(

@@ -1,4 +1,3 @@
-// apps/devlog-backend/src/posts/dto/create-post.dto.ts
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsOptional, IsArray, IsUUID } from 'class-validator';
 

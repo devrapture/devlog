@@ -110,13 +110,6 @@ export class PostsController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Patch('like/:postId')
-  @ApiAuthenticatedEndpoint('Like a post', 200, PublishResponseDto)
-  likePost(@Param('postId', ParseUUIDPipe) postId: string) {
-    return this.postsService.likePost(postId);
-  }
-
-  @UseGuards(JwtAuthGuard)
   @Get('me/:postId')
   @ApiAuthenticatedEndpoint(
     'Get post for the authenticated user by post id',

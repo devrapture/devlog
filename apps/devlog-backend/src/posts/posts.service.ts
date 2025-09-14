@@ -257,27 +257,6 @@ export class PostsService {
     return await this.postRepository.save(existingDraft);
   }
 
-  // TODO: fix likes
-  async likePost(postId: string) {
-    const post = await this.postRepository.findOne({
-      where: {
-        id: postId,
-      },
-    });
-
-    if (!post) {
-      throw new NotFoundException('Post not found');
-    }
-
-    post.likes += 1;
-
-    await this.postRepository.save(post);
-
-    return {
-      post,
-    };
-  }
-
   async getAllPosts(postQueryDto: PostQueryDto) {
     const { page = 1, limit = 10, category, search } = postQueryDto;
     const skip = (page - 1) * limit;

@@ -1,3 +1,4 @@
+import { Likes } from '../../likes/entities/likes.entity';
 import { Category } from '../../categories/entities/category.entity';
 import { User } from '../../users/entities/user.entity';
 import {
@@ -8,6 +9,7 @@ import {
   JoinTable,
   ManyToMany,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -67,7 +69,7 @@ export class Post {
   views: number;
 
   @Column('int', { default: 0 })
-  likes: number;
+  likesCount: number;
 
   @Column('int', { default: 0 })
   comments: number;
@@ -83,6 +85,10 @@ export class Post {
   @ManyToMany(() => Category, (category) => category.posts)
   @JoinTable()
   categories: Category[];
+
+  // One post can have many likes
+  @OneToMany(() => Likes, (likes) => likes.post)
+  likes: Likes[];
 
   @CreateDateColumn()
   createdAt: Date;

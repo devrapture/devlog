@@ -8,6 +8,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { Likes } from '../../likes/entities/likes.entity';
 
 export enum UserRole {
   ADMIN = 'admin',
@@ -73,6 +74,11 @@ export class User {
   @OneToMany(() => MediaFile, (mediaFile) => mediaFile.uploader)
   mediaFiles: MediaFile[];
 
+  // One user can author many posts
   @OneToMany(() => Post, (post) => post.author)
   posts: Post[];
+
+  // One user can like many posts
+  @OneToMany(() => Likes, (likes) => likes.user)
+  likes: Likes[];
 }
