@@ -1,14 +1,14 @@
 // apps/devlog-backend/src/main.ts
-import { NestFactory, Reflector } from '@nestjs/core';
-import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
+import { NestFactory, Reflector } from '@nestjs/core';
 import {
   DocumentBuilder,
   SwaggerCustomOptions,
   SwaggerModule,
 } from '@nestjs/swagger';
-import { TransformInterceptor } from './common/interceptors/transform.interceptor';
+import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -38,6 +38,7 @@ async function bootstrap() {
     .addTag('Users', 'User management endpoints')
     .addTag('Posts', 'Post management endpoints')
     .addTag('Likes', 'Like management endpoints')
+    .addTag('Bookmarks', 'Bookmark management endpoints')
     .addTag('Categories', 'Category management endpoints')
     .addTag('Media', 'Media file management endpoints')
     .addBearerAuth(

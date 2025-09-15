@@ -13,6 +13,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { Bookmarks } from '../../bookmarks/entities/bookmark.entity';
 
 export enum PostStatus {
   PUBLISHED = 'published',
@@ -75,7 +76,7 @@ export class Post {
   comments: number;
 
   @Column('int', { default: 0 })
-  bookmarks: number;
+  bookmarkCount: number;
 
   @ManyToOne(() => User, (user) => user.posts, {
     onDelete: 'CASCADE',
@@ -89,6 +90,9 @@ export class Post {
   // One post can have many likes
   @OneToMany(() => Likes, (likes) => likes.post)
   likes: Likes[];
+
+  @OneToMany(() => Bookmarks, (bookmarks) => bookmarks.post)
+  bookmarks: Bookmarks[];
 
   @CreateDateColumn()
   createdAt: Date;
