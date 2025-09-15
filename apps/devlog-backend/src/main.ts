@@ -10,6 +10,15 @@ import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 
+/**
+ * Bootstraps and starts the NestJS application.
+ *
+ * Creates the application from AppModule, configures global validation, transformation,
+ * exception handling, and a global API prefix (`api/v1`). Registers Swagger UI at `/docs`
+ * (with the raw JSON at `/docs/json`), including tags, JWT Bearer auth, and an operationId
+ * factory that uses method names. Finally, starts the HTTP server on the port defined by
+ * `process.env.PORT` or 8080 if unset.
+ */
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
