@@ -18,10 +18,14 @@ export class Bookmarks {
   @CreateDateColumn()
   createdAt: Date;
 
-  @ManyToOne(() => User, (user) => user.bookmarks)
+  @ManyToOne(() => User, (user) => user.bookmarks, {
+    onDelete: 'CASCADE',
+  })
   user: User;
 
-  @ManyToOne(() => Post, (post) => post.bookmarks)
+  @ManyToOne(() => Post, (post) => post.bookmarks, {
+    onDelete: 'CASCADE',
+  })
   post: Post;
 
   @UpdateDateColumn()

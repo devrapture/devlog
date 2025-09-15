@@ -27,40 +27,33 @@ export class BookmarksService {
     });
 
     if (!post) throw new NotFoundException('Post not found');
+    try {
+      await this.postRepository.manager.transaction(async (manager) => {
+        await manager.save(Bookmarks, {
+          user: {
+            id: userId,
+          },
+          post: {
+            id: postId,
+          },
+        });
 
-    const existingBookmark = await this.bookmarkRepository.findOne({
-      where: {
-        user: {
-          id: userId,
-        },
-        post: {
-          id: postId,
-        },
-      },
-    });
-
-    if (existingBookmark)
-      throw new ConflictException('Bookmark already exists');
-
-    await this.postRepository.manager.transaction(async (manager) => {
-      await manager.save(Bookmarks, {
-        user: {
-          id: userId,
-        },
-        post: {
-          id: postId,
-        },
+        await manager.increment(
+          Post,
+          {
+            id: postId,
+          },
+          'bookmarkCount',
+          1,
+        );
       });
-
-      await manager.increment(
-        Post,
-        {
-          id: postId,
-        },
-        'bookmarkCount',
-        1,
-      );
-    });
+    } catch (error: unknown) {
+      // @ts-expect-error error is unknown
+      if (error?.code === '23505') {
+        throw new ConflictException('Bookmark already exists');
+      }
+      throw error;
+    }
     return;
   }
 
@@ -84,18 +77,28 @@ export class BookmarksService {
       },
     });
 
-    if (!existingBookmark) throw new NotFoundException('Already unbookmarked');
-    await this.postRepository.manager.transaction(async (manager) => {
-      await manager.remove(Bookmarks, existingBookmark);
-      await manager.decrement(
-        Post,
-        {
-          id: postId,
-        },
-        'bookmarkCount',
-        1,
-      );
-    });
+    if (!existingBookmark) throw new NotFoundException('Bookmark not found');
+
+    try {
+      await this.postRepository.manager.transaction(async (manager) => {
+        await manager.remove(Bookmarks, existingBookmark);
+        await manager.decrement(
+          Post,
+          {
+            id: postId,
+          },
+          'bookmarkCount',
+          1,
+        );
+      });
+    } catch (error: unknown) {
+      // @ts-expect-error error is unknown
+      if (error?.code === '23505') {
+        throw new ConflictException('Bookmark already exists');
+      }
+      throw error;
+    }
+
     return;
   }
 
@@ -128,7 +131,7 @@ export class BookmarksService {
     const totalPages = Math.ceil(totalItems / limit);
     const res = {
       items,
-      metadata: {
+      meta: {
         currentPage: page,
         itemsPerPage: limit,
         totalItems,
