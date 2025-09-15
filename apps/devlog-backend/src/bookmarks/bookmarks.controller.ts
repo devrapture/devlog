@@ -2,8 +2,6 @@ import {
   Controller,
   Delete,
   Get,
-  HttpCode,
-  HttpStatus,
   Param,
   ParseUUIDPipe,
   Post,
@@ -17,47 +15,46 @@ import { ResponseMessage } from 'src/common/decorators/response-message.decorato
 import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 import { PaginatedResponse } from 'src/common/dto/responses/base-response.dto';
 import { SuccessResponseDto } from 'src/common/dto/responses/success-response.dto';
-import { LikesService } from './likes.service';
+import { BookmarksService } from './bookmarks.service';
 
-@Controller('likes')
-export class LikesController {
-  constructor(private readonly likesService: LikesService) {}
+@Controller('bookmarks')
+export class BookmarksController {
+  constructor(private readonly bookmarkService: BookmarksService) {}
 
   @UseGuards(JwtAuthGuard)
-  @HttpCode(HttpStatus.OK)
-  @ResponseMessage('Liked successfully')
-  @ApiAuthenticatedEndpoint('Like a post', 200, SuccessResponseDto)
+  @ResponseMessage('Bookmarked successfully')
+  @ApiAuthenticatedEndpoint('Bookmark a post', 200, SuccessResponseDto)
   @Post(':postId')
-  likePost(
+  bookmarkPost(
     @GetUser('id') userId: string,
     @Param('postId', ParseUUIDPipe) postId: string,
   ) {
-    return this.likesService.likePost(userId, postId);
+    return this.bookmarkService.bookmarkPost(userId, postId);
   }
 
   @UseGuards(JwtAuthGuard)
-  @HttpCode(HttpStatus.OK)
-  @ResponseMessage('Unliked successfully')
-  @ApiAuthenticatedEndpoint('Unlike a post', 200, SuccessResponseDto)
+  @ResponseMessage('Unbookmarked successfully')
+  @ApiAuthenticatedEndpoint('Unbookmark a post', 200, SuccessResponseDto)
   @Delete(':postId')
-  unlikePost(
+  unBookmarkPost(
     @GetUser('id') userId: string,
     @Param('postId', ParseUUIDPipe) postId: string,
   ) {
-    return this.likesService.unlikePost(userId, postId);
+    return this.bookmarkService.unBookmarkPost(userId, postId);
   }
 
   @UseGuards(JwtAuthGuard)
+  @ResponseMessage('Get bookmarked posts for the current user')
   @ApiAuthenticatedEndpoint(
-    'Get liked post for the current user',
+    'Get bookmarked posts for the current user',
     200,
     PaginatedResponse,
   )
   @Get('posts')
-  getLikedPosts(
+  getBookmarkedPosts(
     @GetUser('id') userId: string,
     @Query() paginationQueryDto: PaginationQueryDto,
   ) {
-    return this.likesService.getLikedPosts(userId, paginationQueryDto);
+    return this.bookmarkService.getBookmarkedPosts(userId, paginationQueryDto);
   }
 }

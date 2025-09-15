@@ -1,5 +1,4 @@
-import { Post } from '../../posts/entities/post.entity';
-import { MediaFile } from '../../file-upload/entities/media-file.entity';
+import { Bookmarks } from '../../bookmarks/entities/bookmark.entity';
 import {
   Column,
   CreateDateColumn,
@@ -8,7 +7,9 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { MediaFile } from '../../file-upload/entities/media-file.entity';
 import { Likes } from '../../likes/entities/likes.entity';
+import { Post } from '../../posts/entities/post.entity';
 
 export enum UserRole {
   ADMIN = 'admin',
@@ -81,4 +82,7 @@ export class User {
   // One user can like many posts
   @OneToMany(() => Likes, (likes) => likes.user)
   likes: Likes[];
+
+  @OneToMany(() => Bookmarks, (bookmarks) => bookmarks.user)
+  bookmarks: Bookmarks[];
 }

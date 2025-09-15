@@ -11,24 +11,23 @@ import { User } from '../../users/entities/user.entity';
 
 @Entity()
 @Index(['user', 'post'], { unique: true })
-export class Likes {
+export class Bookmarks {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
   @CreateDateColumn()
   createdAt: Date;
 
-  @UpdateDateColumn()
-  updatedAt: Date;
-
-  @ManyToOne(() => User, (user) => user.likes, {
+  @ManyToOne(() => User, (user) => user.bookmarks, {
     onDelete: 'CASCADE',
   })
   user: User;
 
-  // Many likes can be associated with one post
-  @ManyToOne(() => Post, (post) => post.likes, {
+  @ManyToOne(() => Post, (post) => post.bookmarks, {
     onDelete: 'CASCADE',
   })
   post: Post;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 }
