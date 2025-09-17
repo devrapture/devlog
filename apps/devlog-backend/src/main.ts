@@ -38,6 +38,7 @@ async function bootstrap() {
     .addTag('Users', 'User management endpoints')
     .addTag('Posts', 'Post management endpoints')
     .addTag('Likes', 'Like management endpoints')
+    .addTag('Follows', 'Follow management endpoints')
     .addTag('Bookmarks', 'Bookmark management endpoints')
     .addTag('Categories', 'Category management endpoints')
     .addTag('Media', 'Media file management endpoints')
