@@ -10,6 +10,7 @@ import {
 import { MediaFile } from '../../file-upload/entities/media-file.entity';
 import { Likes } from '../../likes/entities/likes.entity';
 import { Post } from '../../posts/entities/post.entity';
+import { Follow } from '../../follows/entities/follow.entity';
 
 export enum UserRole {
   ADMIN = 'admin',
@@ -66,6 +67,18 @@ export class User {
   })
   lastLoginAt: Date;
 
+  @Column({
+    type: 'int',
+    default: 0,
+  })
+  followingCount: number;
+
+  @Column({
+    type: 'int',
+    default: 0,
+  })
+  followersCount: number;
+
   @CreateDateColumn()
   createdAt: Date;
 
@@ -85,4 +98,10 @@ export class User {
 
   @OneToMany(() => Bookmarks, (bookmarks) => bookmarks.user)
   bookmarks: Bookmarks[];
+
+  @OneToMany(() => Follow, (follow) => follow.following)
+  follower: Follow[];
+
+  @OneToMany(() => Follow, (follow) => follow.follower)
+  following: Follow[];
 }
