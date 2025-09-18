@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { PaginationMetaDto } from 'src/common/dto/responses/base-response.dto';
 
 export class FollowDto {
   @ApiProperty()
@@ -46,14 +47,9 @@ export class AllFollowersResponseDtoWithPagination {
     description: 'Response data containing the draft',
   })
   items: AllFollowersResponseDto[];
-  meta: {
-    currentPage: number;
-    itemsPerPage: number;
-    totalItems: number;
-    totalPages: number;
-    hasPreviousPage: boolean;
-    hasNextPage: boolean;
-  };
+
+  @ApiProperty({ type: PaginationMetaDto })
+  meta: PaginationMetaDto;
 }
 
 export class AllFollowingResponseDtoWithPagination {
@@ -71,12 +67,7 @@ export class AllFollowingResponseDtoWithPagination {
     description: 'Response data containing the draft',
   })
   items: AllFollowingResponseDto[];
-  meta: {
-    currentPage: number;
-    itemsPerPage: number;
-    totalItems: number;
-    totalPages: number;
-    hasPreviousPage: boolean;
-    hasNextPage: boolean;
-  };
+
+  @ApiProperty({ type: PaginationMetaDto })
+  meta: PaginationMetaDto;
 }
