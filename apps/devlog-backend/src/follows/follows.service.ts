@@ -6,7 +6,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 import { User } from 'src/users/entities/user.entity';
-import { Repository } from 'typeorm';
+import { QueryFailedError, Repository } from 'typeorm';
 import { Follow } from './entities/follow.entity';
 
 @Injectable()
@@ -38,31 +38,31 @@ export class FollowsService {
 
     if (!user) throw new NotFoundException('User not found');
 
-    const existingFollow = await this.followRepository.findOne({
-      where: {
-        following: {
-          id: followingId,
-        },
-        follower: {
-          id: userId,
-        },
-      },
-    });
+    try {
+      await this.followRepository.manager.transaction(async (manager) => {
+        await manager
+          .createQueryBuilder()
+          .insert()
+          .into(Follow)
+          .values({
+            follower: { id: userId },
+            following: { id: followingId },
+          })
+          .execute();
 
-    if (existingFollow)
-      throw new ConflictException('User is already following');
-
-    await this.followRepository.manager.transaction(async (manager) => {
-      // Create follow record
-      await manager.save(Follow, {
-        follower: { id: userId },
-        following: { id: followingId },
+        // Increment follow count
+        await manager.increment(User, { id: userId }, 'followingCount', 1);
+        await manager.increment(User, { id: followingId }, 'followersCount', 1);
       });
-
-      // Increment follow count
-      await manager.increment(User, { id: userId }, 'followingCount', 1);
-      await manager.increment(User, { id: followingId }, 'followersCount', 1);
-    });
+    } catch (error) {
+      if (
+        error instanceof QueryFailedError &&
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        error.driverError?.code === '23505'
+      ) {
+        throw new ConflictException('User is already following');
+      }
+    }
 
     return;
   }
@@ -76,36 +76,26 @@ export class FollowsService {
 
     if (!following) throw new NotFoundException('User to unfollow not found');
 
-    const user = await this.userRepository.findOne({
-      where: {
-        id: userId,
-      },
-    });
-
-    if (!user) throw new NotFoundException('User not found');
-
-    const existingFollow = await this.followRepository.findOne({
-      where: {
-        following: {
-          id: followingId,
-        },
-        follower: {
-          id: userId,
-        },
-      },
-    });
-
-    if (!existingFollow)
-      throw new NotFoundException('User is not following this user');
-
     await this.followRepository.manager.transaction(async (manager) => {
-      // Remove follow record
-      await manager.remove(Follow, existingFollow);
+      const result = await manager
+        .createQueryBuilder()
+        .delete()
+        .from(Follow)
+        .where('followerId = :userId AND followingId = :followingId', {
+          userId,
+          followingId,
+        })
+        .execute();
+
+      if (!result.affected) {
+        throw new NotFoundException('User is not following this user');
+      }
 
       // Decrement follow count
       await manager.decrement(User, { id: userId }, 'followingCount', 1);
       await manager.decrement(User, { id: followingId }, 'followersCount', 1);
     });
+
     return;
   }
 

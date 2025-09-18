@@ -14,6 +14,10 @@ import { ApiAuthenticatedEndpoint } from 'src/common/decorators/api-responses.de
 import { ResponseMessage } from 'src/common/decorators/response-message.decorator';
 import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 import { SuccessResponseDto } from 'src/common/dto/responses/success-response.dto';
+import {
+  AllFollowersResponseDtoWithPagination,
+  AllFollowingResponseDtoWithPagination,
+} from './dto/follow-response.dto';
 import { FollowsService } from './follows.service';
 
 @Controller('follows')
@@ -43,7 +47,11 @@ export class FollowsController {
 
   @Get('following')
   @UseGuards(JwtAuthGuard)
-  @ApiAuthenticatedEndpoint('Get following', 200, SuccessResponseDto)
+  @ApiAuthenticatedEndpoint(
+    'Get following',
+    200,
+    AllFollowingResponseDtoWithPagination,
+  )
   getFollowing(
     @GetUser('id') userId: string,
     @Query() paginationQueryDto: PaginationQueryDto,
@@ -53,7 +61,11 @@ export class FollowsController {
 
   @Get('followers')
   @UseGuards(JwtAuthGuard)
-  @ApiAuthenticatedEndpoint('Get followers', 200, SuccessResponseDto)
+  @ApiAuthenticatedEndpoint(
+    'Get followers',
+    200,
+    AllFollowersResponseDtoWithPagination,
+  )
   getFollowers(
     @GetUser('id') userId: string,
     @Query() paginationQueryDto: PaginationQueryDto,
