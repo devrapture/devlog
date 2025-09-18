@@ -4,6 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 import { User } from 'src/users/entities/user.entity';
 import { Repository } from 'typeorm';
 import { Follow } from './entities/follow.entity';
@@ -108,11 +109,67 @@ export class FollowsService {
     return;
   }
 
-  getFollowing(userId: string) {
-    return userId;
+  async getFollowing(userId: string, paginationQueryDto: PaginationQueryDto) {
+    const user = await this.userRepository.findOne({
+      where: {
+        id: userId,
+      },
+    });
+
+    if (!user) throw new NotFoundException('User not found');
+    const { limit = 10, page = 1 } = paginationQueryDto;
+    const skip = (page - 1) * limit;
+    const queryBuilder = this.followRepository
+      .createQueryBuilder('follow')
+      .where('follow.followerId = :userId', {
+        userId,
+      })
+      .leftJoin('follow.following', 'following')
+      .addSelect(['following.id', 'following.displayName', 'following.avatar'])
+      .orderBy('follow.createdAt', 'DESC')
+      .skip(skip)
+      .take(limit);
+    const [items, totalItems] = await queryBuilder.getManyAndCount();
+    const totalPages = Math.ceil(totalItems / limit);
+    const res = {
+      items,
+      meta: {
+        currentPage: page,
+        itemsPerPage: limit,
+        totalItems,
+        totalPages,
+        hasPreviousPage: page > 1,
+        hasNextPage: page < totalPages,
+      },
+    };
+    return res;
   }
 
-  getFollowers(userId: string) {
-    return userId;
+  async getFollowers(userId: string, paginationQueryDto: PaginationQueryDto) {
+    const { limit = 10, page = 1 } = paginationQueryDto;
+    const skip = (page - 1) * limit;
+    const queryBuilder = this.followRepository
+      .createQueryBuilder('follow')
+      .where('follow.followingId = :userId', { userId })
+      .leftJoin('follow.follower', 'follower')
+      .addSelect(['follower.id', 'follower.displayName', 'follower.avatar'])
+      .orderBy('follow.createdAt', 'DESC')
+      .skip(skip)
+      .take(limit);
+
+    const [items, totalItems] = await queryBuilder.getManyAndCount();
+    const totalPages = Math.ceil(totalItems / limit);
+    const res = {
+      items,
+      meta: {
+        currentPage: page,
+        itemsPerPage: limit,
+        totalItems,
+        totalPages,
+        hasPreviousPage: page > 1,
+        hasNextPage: page < totalPages,
+      },
+    };
+    return res;
   }
 }
