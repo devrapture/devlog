@@ -5,15 +5,16 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
-import { Post, PostStatus } from './entities/post.entity';
-import { CreatePostDto } from './dto/create-post.dto';
-import { Category } from '../categories/entities/category.entity';
-import { User } from 'src/users/entities/user.entity';
-import { CreatePublishPostDto } from './dto/publish-post.dto';
-import { generateSlug } from 'src/common/utils/slug.util';
 import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
+import { generateSlug } from 'src/common/utils/slug.util';
+import { Follow } from 'src/follows/entities/follow.entity';
+import { User } from 'src/users/entities/user.entity';
+import { In, Repository } from 'typeorm';
+import { Category } from '../categories/entities/category.entity';
+import { CreatePostDto } from './dto/create-post.dto';
 import { PostQueryDto } from './dto/post-query.dto';
+import { CreatePublishPostDto } from './dto/publish-post.dto';
+import { Post, PostStatus } from './entities/post.entity';
 import { ViewTrackerService } from './view-tracker.service';
 
 @Injectable()
@@ -24,6 +25,8 @@ export class PostsService {
     private readonly categoryRepository: Repository<Category>,
     private readonly viewTrackerService: ViewTrackerService,
     @InjectRepository(User) private readonly userRepository: Repository<User>,
+    @InjectRepository(Follow)
+    private readonly followReposity: Repository<Follow>,
   ) {}
 
   async createDraft(user: User) {
@@ -484,5 +487,70 @@ export class PostsService {
     return {
       post,
     };
+  }
+
+  async getFollowingPosts(
+    userId: string,
+    paginatedQueryDto: PaginationQueryDto,
+  ) {
+    const { limit = 10, page = 1 } = paginatedQueryDto;
+    const skip = (page - 1) * limit;
+    const user = await this.userRepository.findOne({
+      where: {
+        id: userId,
+      },
+    });
+
+    if (!user) throw new NotFoundException('User not found');
+
+    const follow = await this.followReposity.find({
+      where: {
+        follower: {
+          id: userId,
+        },
+      },
+      relations: ['following'],
+    });
+
+    const followingUserIds = follow?.map((user) => user?.following?.id);
+
+    if (!followingUserIds?.length) {
+      return {
+        items: [],
+        meta: {
+          currentPage: page,
+          totalItems: 0,
+          totalPages: 0,
+          hasPreviousPage: false,
+          hasNextPage: false,
+        },
+      };
+    }
+    const queryBuilder = this.postRepository
+      .createQueryBuilder('post')
+      .leftJoin('post.author', 'author')
+      .addSelect(['author.id', 'author.displayName', 'author.avatar'])
+      .where('post.status = :status', { status: PostStatus.PUBLISHED })
+      .andWhere('post.authorId IN (:...followingUserIds)', {
+        followingUserIds,
+      })
+      .skip(skip)
+      .orderBy('post.publishedAt', 'DESC')
+      .take(limit);
+
+    const [items, totalItems] = await queryBuilder.getManyAndCount();
+    const totalPages = Math.ceil(totalItems / limit);
+    const res = {
+      items,
+      meta: {
+        currentPage: page,
+        itemsPerPage: limit,
+        totalItems,
+        totalPages,
+        hasPreviousPage: page > 1,
+        hasNextPage: page < totalPages,
+      },
+    };
+    return res;
   }
 }

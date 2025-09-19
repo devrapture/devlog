@@ -12,30 +12,44 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
-import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
-import { CreatePostDto } from './dto/create-post.dto';
-import { PostsService } from './posts.service';
-import { ResponseMessage } from 'src/common/decorators/response-message.decorator';
+import type { Request } from 'express';
 import { GetUser } from 'src/auth/decorator/user.decorator';
-import { User } from 'src/users/entities/user.entity';
-import { CreatePublishPostDto, RevertPublishDto } from './dto/publish-post.dto';
-import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import {
   ApiAuthenticatedEndpoint,
   ApiDraftEndpoint,
   ApiUnAuthenticatedEndpoint,
 } from 'src/common/decorators/api-responses.decorator';
+import { ResponseMessage } from 'src/common/decorators/response-message.decorator';
+import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
+import { User } from 'src/users/entities/user.entity';
+import { CreatePostDto } from './dto/create-post.dto';
 import { DraftResponseDtoWithPagination } from './dto/draft-response.dto';
+import { PostQueryDto } from './dto/post-query.dto';
+import { CreatePublishPostDto, RevertPublishDto } from './dto/publish-post.dto';
 import {
   PublishResponseDto,
   PublishResponseDtoWithPagination,
 } from './dto/publish-response.dto';
-import { PostQueryDto } from './dto/post-query.dto';
-import type { Request } from 'express';
+import { PostsService } from './posts.service';
 
 @Controller('posts')
 export class PostsController {
   constructor(private readonly postsService: PostsService) {}
+
+  @UseGuards(JwtAuthGuard)
+  @ApiAuthenticatedEndpoint(
+    'Get following posts',
+    200,
+    PublishResponseDtoWithPagination,
+  )
+  @Get('feed')
+  getFollowingPosts(
+    @GetUser('id') userId: string,
+    @Query() paginatedQueryDto: PaginationQueryDto,
+  ) {
+    return this.postsService.getFollowingPosts(userId, paginatedQueryDto);
+  }
 
   @UseGuards(JwtAuthGuard)
   @ResponseMessage('Draft created successfully')
