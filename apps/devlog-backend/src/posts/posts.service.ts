@@ -27,7 +27,7 @@ export class PostsService {
     @InjectRepository(User) private readonly userRepository: Repository<User>,
     @InjectRepository(Follow)
     private readonly followReposity: Repository<Follow>,
-  ) { }
+  ) {}
 
   async createDraft(user: User) {
     const draft = this.postRepository.create({
@@ -535,6 +535,7 @@ export class PostsService {
         followingUserIds,
       })
       .skip(skip)
+      .orderBy('post.publishedAt', 'DESC')
       .take(limit);
 
     const [items, totalItems] = await queryBuilder.getManyAndCount();
