@@ -32,10 +32,21 @@ import {
 } from './dto/publish-response.dto';
 import { PostQueryDto } from './dto/post-query.dto';
 import type { Request } from 'express';
+import { SuccessResponseDto } from 'src/common/dto/responses/success-response.dto';
 
 @Controller('posts')
 export class PostsController {
   constructor(private readonly postsService: PostsService) {}
+
+  @UseGuards(JwtAuthGuard)
+  @ApiAuthenticatedEndpoint('Get following posts', 200, SuccessResponseDto)
+  @Get('feed')
+  getFollowingPosts(
+    @GetUser('id') userId: string,
+    @Query() paginatedQueryDto: PaginationQueryDto,
+  ) {
+    return this.postsService.getFollowingPosts(userId, paginatedQueryDto);
+  }
 
   @UseGuards(JwtAuthGuard)
   @ResponseMessage('Draft created successfully')
