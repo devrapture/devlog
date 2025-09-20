@@ -1,4 +1,5 @@
 {
+	"globalEnv": ["AUTH_SECRET", "NEXT_PUBLIC_API_URL"],
 	"tasks": {
 		"build": {
 			"dependsOn": ["^build"],
