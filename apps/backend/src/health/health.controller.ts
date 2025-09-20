@@ -1,4 +1,5 @@
 import { Controller, Get } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import {
   HealthCheck,
   HealthCheckService,
@@ -12,6 +13,7 @@ export class HealthController {
     private readonly healthCheckService: HealthCheckService,
     private readonly db: TypeOrmHealthIndicator,
     private readonly http: HttpHealthIndicator,
+    private readonly configService: ConfigService,
   ) {}
 
   @Get()
@@ -22,7 +24,7 @@ export class HealthController {
       () =>
         this.http.pingCheck(
           'devlog docs',
-          'https://devlog-blx8.onrender.com/api/v1/docs',
+          this.configService.get('HEALTH_CHECK_DOCS_URL')!,
         ),
     ]);
   }

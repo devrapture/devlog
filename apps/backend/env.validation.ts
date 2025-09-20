@@ -56,6 +56,9 @@ class EnvironmentVariables {
 
   @IsEnum(Environment)
   NODE_ENV: Environment;
+
+  @IsString()
+  HEALTH_CHECK_DOCS_URL: string;
 }
 
 export const validate = (config: Record<string, unknown>) => {
