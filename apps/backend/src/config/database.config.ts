@@ -6,7 +6,6 @@ export const getDatabaseConfig = (
   configService: ConfigService,
 ): TypeOrmModuleOptions => {
   const isProduction = configService.get('NODE_ENV') === Environment.Production;
-
   const baseConfig = {
     type: 'postgres' as const,
     autoLoadEntities: true,

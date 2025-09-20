@@ -9,25 +9,23 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useSignUp } from "@/hooks/mutate/use-auth";
+import { useLogin } from "@/hooks/mutate/use-auth";
 import { routes } from "@/lib/routes";
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
-
 
 const LoginClientPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const cb = () => {
-    setEmail("");
-    setPassword("");
-  };
-  const { mutate: signUp, isPending } = useSignUp(cb);
+  const { isLoading, onLogin } = useLogin();
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    signUp({ email, password });
+    await onLogin({
+      email,
+      password,
+    });
   };
 
   return (
@@ -62,8 +60,8 @@ const LoginClientPage = () => {
               required
             />
           </div>
-          <Button type="submit" className="w-full" disabled={isPending}>
-            {isPending ? "Signing in..." : "Sign In"}
+          <Button type="submit" className="w-full" disabled={isLoading}>
+            {isLoading ? "Signing in..." : "Sign In"}
           </Button>
         </form>
         <div className="mt-4 text-center text-sm">

@@ -18,11 +18,7 @@ const SignupClient = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const cb = () => {
-    setEmail("");
-    setPassword("");
-  };
-  const { mutate: signUp, isPending } = useSignUp(cb);
+  const { mutate: signUp, isPending } = useSignUp();
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
