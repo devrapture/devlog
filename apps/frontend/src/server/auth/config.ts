@@ -1,12 +1,14 @@
 import { env } from "@/env";
 import { routes } from "@/lib/routes";
-import type { SessionUser } from "@/types/api";
+import type { SessionUser, User } from "@/types/api";
 import axios from "axios";
+import type { Session } from "next-auth";
 import {
   CredentialsSignin,
   type DefaultSession,
   type NextAuthConfig,
 } from "next-auth";
+import type { JWT } from "next-auth/jwt";
 import Credentials from "next-auth/providers/credentials";
 
 class LoginError extends CredentialsSignin {
@@ -76,26 +78,44 @@ export const authConfig = {
      */
   ],
   callbacks: {
-    async jwt({ token, user, trigger, session }) {
+    async jwt({
+      token,
+      user,
+      trigger,
+      session,
+    }: {
+      token: JWT & { user?: User; token?: string };
+      user?: {
+        data?: { user: User; accessToken: string };
+        user?: User;
+        accessToken?: string;
+      };
+      trigger?: "signIn" | "signUp" | "update";
+      session?: Partial<User>;
+    }) {
       if (user) {
-        // @ts-expect-error unknown error
-        token.user = user?.user;
-        token.token = user?.accessToken;
+        token.user = user.data?.user ?? user.user;
+        token.token = user.data?.accessToken ?? user.accessToken;
       }
 
-      if (trigger === "update" && session) {
-        // @ts-expect-error session is not defined
+      if (trigger === "update" && session && token.user) {
         token.user = { ...token.user, ...session };
       }
       return token;
     },
-    session: ({ session, token }) => {
+    session: ({
+      session,
+      token,
+    }: {
+      session: Session;
+      token: JWT & { user?: User; token?: string };
+    }) => {
       if (token.user) {
         session.user = {
           ...session.user,
           ...token.user,
         };
-        session.token = token?.token as string;
+        session.token = token.token!;
       }
       return session;
     },

@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/logic/use-toast";
 import { routes } from "@/lib/routes";
+import { getInitials } from "@/lib/utils";
 import {
   Bookmark,
   FileText,
@@ -29,7 +30,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
-import { getInitials } from "@/lib/utils";
 
 export function Header() {
   const { data: session, status } = useSession();
@@ -119,8 +119,8 @@ export function Header() {
                           src={session?.user.avatar ?? "/placeholder-user.jpg"}
                         />
                         <AvatarFallback>
-                          {session?.user.avatar
-                            ? getInitials(session?.user.avatar)
+                          {session?.user.displayName
+                            ? getInitials(session?.user.displayName)
                             : "U"}
                         </AvatarFallback>
                       </Avatar>
