@@ -11,6 +11,7 @@ import { LikesModule } from './likes/likes.module';
 import { BookmarksModule } from './bookmarks/bookmarks.module';
 import { FollowsModule } from './follows/follows.module';
 import { getDatabaseConfig } from './config/database.config';
+import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { getDatabaseConfig } from './config/database.config';
     LikesModule,
     BookmarksModule,
     FollowsModule,
+    HealthModule,
   ],
 })
 export class AppModule {}

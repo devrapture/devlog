@@ -34,6 +34,7 @@ async function bootstrap() {
       'DevLog API provides a modern blogging backend for developers and content creators',
     )
     .setVersion('1.0')
+    .addTag('Health', 'Health-related endpoints')
     .addTag('Auth', 'Authentication-related endpoints')
     .addTag('Users', 'User management endpoints')
     .addTag('Posts', 'Post management endpoints')
@@ -78,6 +79,7 @@ async function bootstrap() {
 
       const allowedOrigins = ['http://localhost:3000', 'http://127.0.0.1:3000'];
 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       if (allowedOrigins.includes(origin)) {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         callback(null, true);
@@ -94,4 +96,5 @@ async function bootstrap() {
 
   await app.listen(process.env.PORT ?? 8080);
 }
+// eslint-disable-next-line @typescript-eslint/no-floating-promises
 bootstrap();
