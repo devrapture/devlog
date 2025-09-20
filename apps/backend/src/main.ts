@@ -82,7 +82,7 @@ async function bootstrap() {
       const allowedOrigins = [
         'http://localhost:3000',
         'http://127.0.0.1:3000',
-        'https://devlog-staging.vercel.app/',
+        'https://devlog-staging.vercel.app',
       ];
 
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
@@ -97,7 +97,7 @@ async function bootstrap() {
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
     allowedHeaders: 'Content-Type, Authorization',
-    maxAge: 600,
+    maxAge: 86400,
   });
 
   await app.listen(process.env.PORT ?? 8080);
