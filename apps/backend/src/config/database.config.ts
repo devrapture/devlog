@@ -13,7 +13,7 @@ export const getDatabaseConfig = (
     synchronize: false,
     migrationsTableName: 'migrations',
     entities: [__dirname + '/../**/*.entity{.ts,.js}'],
-    migrations: [__dirname + '/../migrations/**/*.ts'],
+    migrations: [__dirname + '/../migrations/**/*{.ts,.js}'],
   };
 
   if (isProduction) {

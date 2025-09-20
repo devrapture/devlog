@@ -1,5 +1,11 @@
 import { plainToInstance } from 'class-transformer';
-import { IsEnum, IsInt, IsString, validateSync } from 'class-validator';
+import {
+  IsEnum,
+  IsInt,
+  IsString,
+  ValidateIf,
+  validateSync,
+} from 'class-validator';
 
 export enum Environment {
   Development = 'development',
@@ -8,20 +14,35 @@ export enum Environment {
 }
 
 class EnvironmentVariables {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+  @ValidateIf((o) => o.NODE_ENV !== Environment.Production)
   @IsString()
   DATABASE_HOST: string;
 
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+  @ValidateIf((o) => o.NODE_ENV !== Environment.Production)
   @IsInt()
   DATABASE_PORT: number;
 
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+  @ValidateIf((o) => o.NODE_ENV !== Environment.Production)
   @IsString()
   DATABASE_USERNAME: string;
 
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+  @ValidateIf((o) => o.NODE_ENV !== Environment.Production)
   @IsString()
   DATABASE_PASSWORD: string;
 
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+  @ValidateIf((o) => o.NODE_ENV !== Environment.Production)
   @IsString()
   DATABASE_NAME: string;
+
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+  @ValidateIf((o) => o.NODE_ENV === Environment.Production)
+  @IsString()
+  DATABASE_URL: string;
 
   @IsString()
   JWT_SECRET: string;
