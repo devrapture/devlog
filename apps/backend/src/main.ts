@@ -73,18 +73,17 @@ async function bootstrap() {
   app.enableCors({
     origin: (origin, callback) => {
       // Allow requests with no origin (like mobile apps or curl requests)
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call
       if (!origin) return callback(null, true);
 
-      const allowedOrigins = [
-        'http://localhost:3000',
-        'http://127.0.0.1:3000',
-        'https://your-production-domain.com',
-      ];
+      const allowedOrigins = ['http://localhost:3000', 'http://127.0.0.1:3000'];
 
       if (allowedOrigins.includes(origin)) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         callback(null, true);
       } else {
-        callback(new Error('Not allowed by CORS'));
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+        callback(null, false);
       }
     },
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',

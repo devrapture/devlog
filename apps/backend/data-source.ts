@@ -13,7 +13,7 @@ export default new DataSource(
         type: 'postgres',
         url: process.env.DATABASE_URL,
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        migrations: [__dirname + '/src/migrations/**/*.ts'],
+        migrations: [__dirname + '/src/migrations/**/*{.ts,.js}'],
         synchronize: false,
         ssl: { rejectUnauthorized: false },
       }
@@ -25,7 +25,7 @@ export default new DataSource(
         password: process.env.DATABASE_PASSWORD || 'password',
         database: process.env.DATABASE_NAME || 'devlog',
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        migrations: [__dirname + '/src/migrations/**/*.ts'],
+        migrations: [__dirname + '/src/migrations/**/*{.ts,.js}'],
         synchronize: false,
       },
 );
