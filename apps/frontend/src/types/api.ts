@@ -10,7 +10,7 @@ export interface PaginationMeta {
 export interface ApiBaseResponse<T> {
   success: boolean;
   message: string;
-  data?: T;
+  data: T;
 }
 
 export interface ApiResponse<T> {
@@ -28,7 +28,6 @@ export interface Category {
   updatedAt: string;
 }
 
-
 export interface User {
   id: string;
   role: string;
@@ -37,6 +36,8 @@ export interface User {
   bio: string | null;
   displayName: string | null;
   isActive: boolean;
+  followersCount?: number;
+  followingCount?: number;
   lastLoginAt: string | null;
   createdAt: string;
   updatedAt: string;
@@ -53,3 +54,10 @@ export type UserRegister = UserCredentials;
 export type SignUpResponse = ApiBaseResponse<{ user: User }>;
 
 export type GetCategoriesResponse = ApiResponse<Category[]>;
+
+export type SessionUser = ApiBaseResponse<{
+  user: User;
+  accessToken: string;
+}>;
+
+export type GetUserProfileResponse = ApiResponse<{ user: User }>;

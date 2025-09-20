@@ -8,33 +8,54 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/logic/use-toast";
+import { routes } from "@/lib/routes";
+import { getInitials } from "@/lib/utils";
 import {
+  Bookmark,
+  FileText,
+  LogOut,
   Menu,
+  PenTool,
   Search,
-  X
+  Settings,
+  User,
+  X,
 } from "lucide-react";
+import { signOut, useSession } from "next-auth/react";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "../ui/dropdown-menu";
 
 export function Header() {
+  const { data: session, status } = useSession();
+
   //   const { user, isAuthenticated, logout } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { toast } = useToast();
 
-  // const handleLogout = async () => {
-  //     try {
-  //         await logout();
-  //         toast({
-  //             title: "Logged out",
-  //             description: "You have been successfully logged out.",
-  //         });
-  //     } catch (error) {
-  //         toast({
-  //             title: "Error",
-  //             description: "Failed to log out",
-  //             variant: "destructive",
-  //         });
-  //     }
-  // };
+  const handleLogout = async () => {
+    try {
+      await signOut({
+        callbackUrl: routes.auth.login,
+      });
+      toast({
+        title: "Logged out",
+        description: "You have been successfully logged out.",
+      });
+    } catch {
+      toast({
+        title: "Error",
+        description: "Failed to log out",
+        variant: "destructive",
+      });
+    }
+  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,15 +63,6 @@ export function Header() {
       // Implement search functionality
       console.log("Searching for:", searchQuery);
     }
-  };
-
-  const getInitials = (name: string) => {
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
   };
 
   return (
@@ -82,8 +94,8 @@ export function Header() {
           </div>
 
           {/* Desktop Navigation */}
-          {/* <div className="hidden items-center gap-4 md:flex">
-            {isAuthenticated ? (
+          <div className="hidden items-center gap-4 md:flex">
+            {session?.user ? (
               <>
                 <Link href="/editor">
                   <Button
@@ -103,9 +115,13 @@ export function Header() {
                       className="relative h-8 w-8 rounded-full"
                     >
                       <Avatar className="h-8 w-8">
-                        <AvatarImage src={user?.avatar || "/placeholder.svg"} />
+                        <AvatarImage
+                          src={session?.user.avatar ?? "/placeholder-user.jpg"}
+                        />
                         <AvatarFallback>
-                          {user ? getInitials(user.displayName) : "U"}
+                          {session?.user.displayName
+                            ? getInitials(session?.user.displayName)
+                            : "U"}
                         </AvatarFallback>
                       </Avatar>
                     </Button>
@@ -113,22 +129,27 @@ export function Header() {
                   <DropdownMenuContent className="w-56" align="end" forceMount>
                     <div className="flex items-center justify-start gap-2 p-2">
                       <div className="flex flex-col space-y-1 leading-none">
-                        <p className="font-medium">{user?.displayName}</p>
+                        <p className="font-medium">
+                          {session?.user?.displayName}
+                        </p>
                         <p className="text-muted-foreground w-[200px] truncate text-sm">
-                          {user?.email}
+                          {session?.user?.email}
                         </p>
                       </div>
                     </div>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
-                      <Link href="/profile" className="flex items-center gap-2">
-                        <User className="h-4 w-4" />
+                      <Link
+                        href={routes.profile}
+                        className="flex items-center gap-2"
+                      >
+                        <User className="h-4 w-4 text-current" />
                         Profile
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
                       <Link href="/drafts" className="flex items-center gap-2">
-                        <FileText className="h-4 w-4" />
+                        <FileText className="h-4 w-4 text-current" />
                         My Drafts
                       </Link>
                     </DropdownMenuItem>
@@ -137,7 +158,7 @@ export function Header() {
                         href="/bookmarks"
                         className="flex items-center gap-2"
                       >
-                        <Bookmark className="h-4 w-4" />
+                        <Bookmark className="h-4 w-4 text-current" />
                         Bookmarks
                       </Link>
                     </DropdownMenuItem>
@@ -146,7 +167,7 @@ export function Header() {
                         href="/profile/edit"
                         className="flex items-center gap-2"
                       >
-                        <Settings className="h-4 w-4" />
+                        <Settings className="h-4 w-4 text-current" />
                         Settings
                       </Link>
                     </DropdownMenuItem>
@@ -155,7 +176,7 @@ export function Header() {
                       onClick={handleLogout}
                       className="flex items-center gap-2"
                     >
-                      <LogOut className="h-4 w-4" />
+                      <LogOut className="h-4 w-4 text-current" />
                       Log out
                     </DropdownMenuItem>
                   </DropdownMenuContent>
@@ -163,15 +184,15 @@ export function Header() {
               </>
             ) : (
               <div className="flex items-center gap-2">
-                <Link href="/auth">
+                <Link href={routes.auth.login}>
                   <Button variant="ghost">Sign In</Button>
                 </Link>
-                <Link href="/auth">
+                <Link href={routes.auth.signUp}>
                   <Button>Get Started</Button>
                 </Link>
               </div>
             )}
-          </div> */}
+          </div>
 
           {/* Mobile Menu Button */}
           <Button
@@ -204,7 +225,7 @@ export function Header() {
             </form>
 
             {/* Mobile Navigation */}
-            {/* {isAuthenticated ? (
+            {session?.user ? (
               <div className="space-y-2">
                 <Link href="/editor" onClick={() => setMobileMenuOpen(false)}>
                   <Button
@@ -215,7 +236,10 @@ export function Header() {
                     Write
                   </Button>
                 </Link>
-                <Link href="/profile" onClick={() => setMobileMenuOpen(false)}>
+                <Link
+                  href={routes.profile}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
                   <Button
                     variant="ghost"
                     className="w-full justify-start gap-2"
@@ -260,8 +284,8 @@ export function Header() {
                 <Button
                   variant="ghost"
                   className="w-full justify-start gap-2"
-                  onClick={() => {
-                    handleLogout();
+                  onClick={async () => {
+                    await handleLogout();
                     setMobileMenuOpen(false);
                   }}
                 >
@@ -280,7 +304,7 @@ export function Header() {
                   <Button className="w-full">Get Started</Button>
                 </Link>
               </div>
-            )} */}
+            )}
           </div>
         )}
       </div>
