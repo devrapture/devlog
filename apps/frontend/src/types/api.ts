@@ -7,6 +7,11 @@ export interface PaginationMeta {
   hasNextPage: boolean;
 }
 
+export interface SuccessResponse {
+  success: true;
+  message: string;
+}
+
 export interface ApiBaseResponse<T> {
   success: boolean;
   message: string;
@@ -61,3 +66,9 @@ export type SessionUser = ApiBaseResponse<{
 }>;
 
 export type GetUserProfileResponse = ApiResponse<{ user: User }>;
+export type GetUserProfileByIdResponse = ApiResponse<{
+  user: User;
+  isFollowing: boolean;
+}>;
+
+export type UserUpdate = Partial<User>;

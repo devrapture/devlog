@@ -21,7 +21,8 @@ import {
   User,
   X,
 } from "lucide-react";
-import { signOut, useSession } from "next-auth/react";
+import type { Session } from "next-auth";
+import { signOut } from "next-auth/react";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import {
   DropdownMenu,
@@ -31,9 +32,11 @@ import {
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 
-export function Header() {
-  const { data: session, status } = useSession();
+type Prop = {
+  session: Session | null;
+};
 
+export function Header({ session }: Prop) {
   //   const { user, isAuthenticated, logout } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);

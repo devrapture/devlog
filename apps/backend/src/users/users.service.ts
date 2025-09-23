@@ -1,17 +1,20 @@
-import { InjectRepository } from '@nestjs/typeorm';
 import {
   Injectable,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Follow } from 'src/follows/entities/follow.entity';
 import { Repository } from 'typeorm';
-import { User } from './entities/user.entity';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { User } from './entities/user.entity';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User) private readonly userRepository: Repository<User>,
+    @InjectRepository(Follow)
+    private readonly followRepository: Repository<Follow>,
   ) {}
 
   async findOne(email: string) {
@@ -53,13 +56,31 @@ export class UsersService {
     };
   }
 
-  async getUserProfile(userId: string) {
+  async getUserProfile(userId: string, currentUserId?: string) {
     const user = await this.findById(userId);
+    let isFollowing = false;
+    if (currentUserId) {
+      const follow = await this.followRepository.findOne({
+        where: {
+          follower: {
+            id: currentUserId,
+          },
+          following: {
+            id: userId,
+          },
+        },
+      });
+
+      if (follow) {
+        isFollowing = true;
+      }
+    }
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, ...safeUser } = user;
 
     return {
       user: safeUser,
+      isFollowing,
     };
   }
 }
