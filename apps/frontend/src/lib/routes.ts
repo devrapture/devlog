@@ -4,5 +4,7 @@ export const routes = {
     signUp: "/auth/signup",
     login: "/auth/login",
   },
-  profile: '/profile',
+  profile: "/profile",
+  editProfile: "/profile/edit",
+  userProfile: (userId: string) => `/profile/${userId}`,
 };

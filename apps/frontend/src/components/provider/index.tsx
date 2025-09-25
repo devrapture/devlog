@@ -3,6 +3,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { SessionProvider } from "next-auth/react";
 import type { PropsWithChildren } from "react";
 import { getQueryClient } from "./tanstack-query-provider";
+import { NuqsAdapter } from "nuqs/adapters/next/app";
 // import { PostHogProvider } from "./PostHogProvider";
 
 function TanstackQueryProvider({ children }: { children: React.ReactNode }) {
@@ -20,7 +21,9 @@ function TanstackQueryProvider({ children }: { children: React.ReactNode }) {
 const Provider = ({ children }: PropsWithChildren) => {
   return (
     <TanstackQueryProvider>
-      <SessionProvider>{children}</SessionProvider>
+      <SessionProvider>
+        <NuqsAdapter>{children}</NuqsAdapter>
+      </SessionProvider>
     </TanstackQueryProvider>
   );
 };

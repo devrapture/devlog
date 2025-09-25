@@ -1,3 +1,4 @@
+import type { QueryParams } from "@/types/common";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -20,3 +21,18 @@ export const formatDate = (dateString: string) => {
     month: "long",
   })
 }
+
+export const dynamicQueryEndpoint = (
+  params: QueryParams,
+): string => {
+  const queryParams = new URLSearchParams();
+
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null) {
+      queryParams.append(key, String(value));
+    }
+  });
+
+  const queryString = queryParams.toString();
+  return queryString ? `?${queryString}` : "";
+};

@@ -1,35 +1,70 @@
 "use client";
 
+import ProfileSkeletonLoader from "@/components/profile/profile-skeleton-loader";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardHeader } from "@/components/ui/card";
 import SkeletonWrapper from "@/components/ui/skeleton-wrapper";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useGetUserProfile } from "@/hooks/query/use-user";
+import { useFollowUser, useUnFollowUser } from "@/hooks/mutate/use-follow";
+import { useGetUserProfileById } from "@/hooks/query/use-user";
 import { routes } from "@/lib/routes";
 import { formatDate, getInitials } from "@/lib/utils";
-import { Calendar, FileText, Users } from "lucide-react";
-import Link from "next/link";
+import { Calendar, FileText, Loader2, Users } from "lucide-react";
+import { useSession } from "next-auth/react";
+import { useParams, useRouter } from "next/navigation";
 import { useQueryState } from "nuqs";
-import FollowingList from "@/components/profile/following-list";
-import ProfileSkeletonLoader from "@/components/profile/profile-skeleton-loader";
-import FollowersList from "@/components/profile/followers-list";
+import pluralize from "pluralize";
+import { useEffect } from "react";
 
-const ProfileClient = () => {
+const UserProfilePage = () => {
+  const router = useRouter();
   const [tab, setTab] = useQueryState("tab");
-  const { data, isLoading } = useGetUserProfile();
+  const { userId } = useParams();
+  const { data: session } = useSession();
+  const { data, isLoading, isError } = useGetUserProfileById({
+    variables: {
+      id: userId as string,
+    },
+    enabled: !!userId,
+  });
+
+  const { mutate: followUser, isPending: isFollowing } = useFollowUser();
+  const { mutate: unFollowUser, isPending: isUnFollowing } = useUnFollowUser();
   const profile = data?.user;
+
+  const isOwnProfile = session?.user?.id === String(userId);
+
   const handleChangeTab = async (e: string) => await setTab(e);
+
+  const handleFollowToggle = () => {
+    if (data?.isFollowing) {
+      unFollowUser({ id: userId as string });
+    } else {
+      followUser({ id: userId as string });
+    }
+  };
+
+  useEffect(() => {
+    if (isError && !isLoading) {
+      router.replace(routes.root);
+    }
+  }, [isError, isLoading]);
+
   return (
     <div className="container mx-auto px-4 py-8">
-      <SkeletonWrapper isLoading={isLoading} Loader={ProfileSkeletonLoader}>
+      <SkeletonWrapper
+        isLoading={isLoading}
+        Loader={ProfileSkeletonLoader}
+        isEmpty={!profile}
+        EmptyComponent={
+          <div className="py-12 text-center">
+            <p className="text-muted-foreground">User not found</p>
+          </div>
+        }
+      >
         <div className="space-y-6">
-          <Link
-            href={routes.editProfile}
-            className="text-primary flex justify-end"
-          >
-            Edit Profile
-          </Link>
           {/* Profile Header */}
           <Card className="mt-10">
             <CardHeader>
@@ -51,6 +86,20 @@ const ProfileClient = () => {
                       </h1>
                       <p className="text-muted-foreground">{profile?.email}</p>
                     </div>
+
+                    {!isOwnProfile && session?.user?.id && (
+                      <Button
+                        onClick={handleFollowToggle}
+                        disabled={isFollowing || isUnFollowing}
+                        variant={data?.isFollowing ? "outline" : "default"}
+                        className="mt-4 md:mt-0"
+                      >
+                        {isFollowing || isUnFollowing ? (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : null}
+                        {data?.isFollowing ? "Unfollow" : "Follow"}
+                      </Button>
+                    )}
                   </div>
 
                   {profile?.bio && (
@@ -60,16 +109,23 @@ const ProfileClient = () => {
                   <div className="text-muted-foreground flex flex-wrap justify-center gap-4 text-sm md:justify-start">
                     <div className="flex items-center gap-1">
                       <Users className="h-4 w-4" />
-                      <span>{profile?.followersCount ?? 0} followers</span>
+                      <span>
+                        {profile?.followersCount ?? 0}{" "}
+                        {pluralize("followers", profile?.followersCount)}
+                      </span>
                     </div>
                     <div className="flex items-center gap-1">
                       <Users className="h-4 w-4" />
-                      <span>{profile?.followingCount ?? 0} following</span>
+
+                      <span>
+                        {profile?.followingCount ?? 0}{" "}
+                        {pluralize("following", profile?.followingCount)}
+                      </span>
                     </div>
                     <div className="flex items-center gap-1">
                       <FileText className="h-4 w-4" />
                       {/* TODO add post count in backend */}
-                       {/* @ts-expect-error will fix this from backend */}
+                      {/* @ts-expect-error will fix this from backend */}
                       <span>{profile?.postsCount ?? 0} posts</span>
                     </div>
                     <div className="flex items-center gap-1">
@@ -90,7 +146,6 @@ const ProfileClient = () => {
               </div>
             </CardHeader>
           </Card>
-
           {/* Profile Content */}
           <Tabs
             onValueChange={handleChangeTab}
@@ -126,11 +181,11 @@ const ProfileClient = () => {
           </TabsContent> */}
 
             <TabsContent value="followers" className="mt-6">
-              <FollowersList />
+              {/* <FollowersList /> */}
             </TabsContent>
 
             <TabsContent value="following" className="mt-6">
-              <FollowingList />
+              {/* <FollowingList /> */}
             </TabsContent>
           </Tabs>
         </div>
@@ -139,4 +194,4 @@ const ProfileClient = () => {
   );
 };
 
-export default ProfileClient;
+export default UserProfilePage;

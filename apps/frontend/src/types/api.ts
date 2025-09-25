@@ -7,6 +7,11 @@ export interface PaginationMeta {
   hasNextPage: boolean;
 }
 
+export interface SuccessResponse {
+  success: true;
+  message: string;
+}
+
 export interface ApiBaseResponse<T> {
   success: boolean;
   message: string;
@@ -16,8 +21,9 @@ export interface ApiBaseResponse<T> {
 export interface ApiResponse<T> {
   success: boolean;
   message: string;
-  data?: T;
-  items?: T[];
+  data?: {
+    items?: T[];
+  };
   meta?: PaginationMeta;
 }
 
@@ -53,11 +59,41 @@ export type UserRegister = UserCredentials;
 
 export type SignUpResponse = ApiBaseResponse<{ user: User }>;
 
-export type GetCategoriesResponse = ApiResponse<Category[]>;
+export type GetCategoriesResponse = ApiBaseResponse<Category[]>;
 
 export type SessionUser = ApiBaseResponse<{
   user: User;
   accessToken: string;
 }>;
 
-export type GetUserProfileResponse = ApiResponse<{ user: User }>;
+export type GetUserProfileResponse = ApiBaseResponse<{ user: User }>;
+export type GetUserProfileByIdResponse = ApiBaseResponse<{
+  user: User;
+  isFollowing: boolean;
+}>;
+
+export type UserUpdate = Partial<User>;
+
+type FollowItem = {
+  id: string;
+  avatar: string | null;
+  displayName: string | null;
+};
+
+type Following = {
+  id: string;
+  following: FollowItem;
+  createdAt: string;
+  updatedAt: string;
+};
+
+type Follower = {
+  id: string;
+  follower: FollowItem;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type GetUserFollowingResponse = ApiResponse<Following>;
+
+export type GetUserFollowersResponse = ApiResponse<Follower>;
