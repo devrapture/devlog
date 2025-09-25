@@ -6,5 +6,5 @@ export const routes = {
   },
   profile: "/profile",
   editProfile: "/profile/edit",
-  userProfile: (userId: string) => `/user/${userId}`,
+  userProfile: (userId: string) => `/profile/${userId}`,
 };

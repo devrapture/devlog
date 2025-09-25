@@ -15,7 +15,7 @@ export class FollowsService {
     @InjectRepository(User) private readonly userRepository: Repository<User>,
     @InjectRepository(Follow)
     private readonly followRepository: Repository<Follow>,
-  ) {}
+  ) { }
 
   async followUser(userId: string, followingId: string) {
     if (userId === followingId) {
@@ -115,7 +115,13 @@ export class FollowsService {
         userId,
       })
       .leftJoin('follow.following', 'following')
-      .addSelect(['following.id', 'following.displayName', 'following.avatar'])
+      .addSelect([
+        'following.id',
+        'following.displayName',
+        'following.avatar',
+        'following.bio',
+        'follower.email',
+      ])
       .orderBy('follow.createdAt', 'DESC')
       .skip(skip)
       .take(limit);
@@ -142,7 +148,13 @@ export class FollowsService {
       .createQueryBuilder('follow')
       .where('follow.followingId = :userId', { userId })
       .leftJoin('follow.follower', 'follower')
-      .addSelect(['follower.id', 'follower.displayName', 'follower.avatar'])
+      .addSelect([
+        'follower.id',
+        'follower.displayName',
+        'follower.avatar',
+        'follower.bio',
+        'follower.email',
+      ])
       .orderBy('follow.createdAt', 'DESC')
       .skip(skip)
       .take(limit);

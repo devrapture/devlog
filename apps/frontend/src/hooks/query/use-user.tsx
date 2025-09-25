@@ -16,36 +16,3 @@ export const useGetUserProfileById = createQuery({
     return response.data?.data;
   },
 });
-
-
-export const useGetBooking = () => {
-  const [query, setQuery] = useState<QueryParams>({
-    page: 1,
-  });
-  const updateQuery = <K extends keyof QueryParams>(
-    field: K,
-    value: QueryParams[K],
-  ) => {
-    setQuery((prevQuery) => ({
-      ...prevQuery,
-      [field]: value,
-    }));
-  };
-
-  const { ...rest } = useQuery({
-    queryKey: ["get-booking", query],
-    queryFn: async () => {
-      const res = await apis.booking.fetch(
-        // @ts-expect-error type error
-        dynamicQueryEndpoint(query),
-      );
-      return res.data?.data;
-    },
-  });
-
-  return {
-    ...rest,
-    updateQuery,
-    query,
-  };
-};

@@ -1,24 +1,28 @@
 "use client";
 
+import ProfileSkeletonLoader from "@/components/profile/profile-skeleton-loader";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardHeader } from "@/components/ui/card";
-import { useGetUserProfileById } from "@/hooks/query/use-user";
-import { useParams } from "next/navigation";
-// import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import { Card, CardHeader } from "@/components/ui/card";
 import SkeletonWrapper from "@/components/ui/skeleton-wrapper";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useFollowUser, useUnFollowUser } from "@/hooks/mutate/use-follow";
+import { useGetUserProfileById } from "@/hooks/query/use-user";
+import { routes } from "@/lib/routes";
 import { formatDate, getInitials } from "@/lib/utils";
 import { Calendar, FileText, Loader2, Users } from "lucide-react";
 import { useSession } from "next-auth/react";
+import { redirect, useParams } from "next/navigation";
+import { useQueryState } from "nuqs";
 import pluralize from "pluralize";
-import ProfileSkeletonLoader from "../../../../components/profile/profile-skeleton-loader";
+import { useEffect } from "react";
 
 const UserProfilePage = () => {
+  const [tab, setTab] = useQueryState("tab");
   const { userId } = useParams();
   const { data: session } = useSession();
-  const { data, isLoading } = useGetUserProfileById({
+  const { data, isLoading, isError } = useGetUserProfileById({
     variables: {
       id: userId as string,
     },
@@ -31,6 +35,8 @@ const UserProfilePage = () => {
 
   const isOwnProfile = session?.user?.id === userId;
 
+  const handleChangeTab = async (e: string) => await setTab(e);
+
   const handleFollowToggle = () => {
     if (data?.isFollowing) {
       unFollowUser({ id: userId as string });
@@ -38,6 +44,12 @@ const UserProfilePage = () => {
       followUser({ id: userId as string });
     }
   };
+
+  useEffect(() => {
+    if (isError && !isLoading) {
+      redirect(routes.root);
+    }
+  }, [isError, isLoading]);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -112,7 +124,7 @@ const UserProfilePage = () => {
                     <div className="flex items-center gap-1">
                       <FileText className="h-4 w-4" />
                       {/* TODO add post count in backend */}
-                      {/* @ts-expect-error  error*/}
+                      {/* @ts-expect-error will fix this from backend */}
                       <span>{profile?.postsCount ?? 0} posts</span>
                     </div>
                     <div className="flex items-center gap-1">
@@ -133,45 +145,48 @@ const UserProfilePage = () => {
               </div>
             </CardHeader>
           </Card>
-
           {/* Profile Content */}
-          {/* <Tabs defaultValue="posts" className="w-full">
-                  <TabsList className="grid w-full grid-cols-3">
-                      <TabsTrigger value="posts">Posts</TabsTrigger>
-                      <TabsTrigger value="followers">Followers</TabsTrigger>
-                      <TabsTrigger value="following">Following</TabsTrigger>
-                  </TabsList> */}
+          <Tabs
+            onValueChange={handleChangeTab}
+            defaultValue={tab ?? "posts"}
+            className="w-full"
+          >
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="posts">Posts</TabsTrigger>
+              <TabsTrigger value="followers">Followers</TabsTrigger>
+              <TabsTrigger value="following">Following</TabsTrigger>
+            </TabsList>
+            {/* 
+            <TabsContent value="posts" className="mt-6">
+            <div className="space-y-4">
+              {!postsLoading && posts.length === 0 && (
+                <div className="py-12 text-center">
+                  <p className="text-muted-foreground">No posts yet</p>
+                </div>
+              )}
 
-          {/* <TabsContent value="posts" className="mt-6">
-                      <div className="space-y-4">
-                          {!postsLoading && posts.length === 0 && (
-                              <div className="py-12 text-center">
-                                  <p className="text-muted-foreground">No posts yet</p>
-                              </div>
-                          )}
+              {postsLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="text-primary h-8 w-8 animate-spin" />
+                </div>
+              ) : (
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                  {posts.map((post) => (
+                    <PostCard key={post.id} post={post} showAuthor={false} />
+                  ))}
+                </div>
+              )}
+            </div>
+          </TabsContent> */}
 
-                          {postsLoading ? (
-                              <div className="flex items-center justify-center py-12">
-                                  <Loader2 className="text-primary h-8 w-8 animate-spin" />
-                              </div>
-                          ) : (
-                              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                                  {posts.map((post) => (
-                                      <PostCard key={post.id} post={post} showAuthor={false} />
-                                  ))}
-                              </div>
-                          )}
-                      </div>
-                  </TabsContent>
+            <TabsContent value="followers" className="mt-6">
+              {/* <FollowersList /> */}
+            </TabsContent>
 
-                  <TabsContent value="followers" className="mt-6">
-                      <FollowersList userId={userId} />
-                  </TabsContent>
-
-                  <TabsContent value="following" className="mt-6">
-                      <FollowingList userId={userId} />
-                  </TabsContent> */}
-          {/* </Tabs> */}
+            <TabsContent value="following" className="mt-6">
+              {/* <FollowingList /> */}
+            </TabsContent>
+          </Tabs>
         </div>
       </SkeletonWrapper>
     </div>

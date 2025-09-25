@@ -7,6 +7,7 @@ import { useState } from "react";
 export const useGetFollowers = () => {
   const [query, setQuery] = useState<QueryParams>({
     page: 1,
+    limit: 5,
   });
 
   const updateQuery = <K extends keyof QueryParams>(
@@ -37,6 +38,7 @@ export const useGetFollowers = () => {
 export const useGetFollowing = () => {
   const [query, setQuery] = useState<QueryParams>({
     page: 1,
+    limit: 5,
   });
 
   const updateQuery = <K extends keyof QueryParams>(

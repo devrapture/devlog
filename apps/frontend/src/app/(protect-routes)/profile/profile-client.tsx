@@ -11,9 +11,9 @@ import { formatDate, getInitials } from "@/lib/utils";
 import { Calendar, FileText, Users } from "lucide-react";
 import Link from "next/link";
 import { useQueryState } from "nuqs";
-import FollowersList from "../../../components/profile/followers-list";
-import ProfileSkeletonLoader from "../../../components/profile/profile-skeleton-loader";
 import FollowingList from "@/components/profile/following-list";
+import ProfileSkeletonLoader from "@/components/profile/profile-skeleton-loader";
+import FollowersList from "@/components/profile/followers-list";
 
 const ProfileClient = () => {
   const [tab, setTab] = useQueryState("tab");
@@ -69,7 +69,7 @@ const ProfileClient = () => {
                     <div className="flex items-center gap-1">
                       <FileText className="h-4 w-4" />
                       {/* TODO add post count in backend */}
-                      {/* @ts-expect-error  error*/}
+                       {/* @ts-expect-error will fix this from backend */}
                       <span>{profile?.postsCount ?? 0} posts</span>
                     </div>
                     <div className="flex items-center gap-1">

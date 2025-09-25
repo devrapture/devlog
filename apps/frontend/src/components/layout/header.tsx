@@ -2,9 +2,6 @@
 
 import type React from "react";
 
-import Link from "next/link";
-import { useState } from "react";
-// import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/logic/use-toast";
@@ -21,8 +18,9 @@ import {
   User,
   X,
 } from "lucide-react";
-import type { Session } from "next-auth";
-import { signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
+import Link from "next/link";
+import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import {
   DropdownMenu,
@@ -31,13 +29,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
+import { Skeleton } from "../ui/skeleton";
 
-type Prop = {
-  session: Session | null;
-};
 
-export function Header({ session }: Prop) {
-  //   const { user, isAuthenticated, logout } = useAuth();
+export function Header() {
+  const { data: session, status } = useSession();
   const [searchQuery, setSearchQuery] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { toast } = useToast();
@@ -67,6 +63,33 @@ export function Header({ session }: Prop) {
       console.log("Searching for:", searchQuery);
     }
   };
+
+  // Skeleton loader for the Header
+  const HeaderSkeleton = () => (
+    <header className="bg-background/95 supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 w-full border-b backdrop-blur">
+      <div className="container mx-auto px-4">
+        <div className="flex h-16 items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-8 w-8 rounded-lg" />
+            <Skeleton className="h-6 w-24" />
+          </div>
+          <div className="mx-8 hidden max-w-md flex-1 md:flex">
+            <Skeleton className="h-10 w-full" />
+          </div>
+          <div className="hidden items-center gap-4 md:flex">
+            <Skeleton className="h-8 w-20" />
+            <Skeleton className="h-8 w-8 rounded-full" />
+          </div>
+          <Skeleton className="h-8 w-8 md:hidden" />
+        </div>
+      </div>
+    </header>
+  );
+
+  // Render skeleton while session is loading
+  if (status === "loading") {
+    return <HeaderSkeleton />;
+  }
 
   return (
     <header className="bg-background/95 supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 w-full border-b backdrop-blur">
