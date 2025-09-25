@@ -22,10 +22,37 @@ export const useGetFollowers = () => {
   const { ...rest } = useQuery({
     queryKey: ["get-followers", query],
     queryFn: async () => {
-      const res = await followApis.getFollowers(
-        // @ts-expect-error type error
-        dynamicQueryEndpoint(query),
-      );
+      const res = await followApis.getFollowers(dynamicQueryEndpoint(query));
+      return res?.data?.data;
+    },
+  });
+
+  return {
+    ...rest,
+    updateQuery,
+    query,
+  };
+};
+
+export const useGetFollowing = () => {
+  const [query, setQuery] = useState<QueryParams>({
+    page: 1,
+  });
+
+  const updateQuery = <K extends keyof QueryParams>(
+    field: K,
+    value: QueryParams[K],
+  ) => {
+    setQuery((prevQuery) => ({
+      ...prevQuery,
+      [field]: value,
+    }));
+  };
+
+  const { ...rest } = useQuery({
+    queryKey: ["get-following", query],
+    queryFn: async () => {
+      const res = await followApis.getFollowing(dynamicQueryEndpoint(query));
       return res?.data?.data;
     },
   });

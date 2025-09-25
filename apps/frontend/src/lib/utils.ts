@@ -1,3 +1,4 @@
+import type { QueryParams } from "@/types/common";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -22,13 +23,12 @@ export const formatDate = (dateString: string) => {
 }
 
 export const dynamicQueryEndpoint = (
-  params: Record<string, unknown>,
+  params: QueryParams,
 ): string => {
   const queryParams = new URLSearchParams();
 
   Object.entries(params).forEach(([key, value]) => {
     if (value !== undefined && value !== null) {
-      // eslint-disable-next-line @typescript-eslint/no-base-to-string
       queryParams.append(key, String(value));
     }
   });

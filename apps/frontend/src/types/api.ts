@@ -72,3 +72,29 @@ export type GetUserProfileByIdResponse = ApiResponse<{
 }>;
 
 export type UserUpdate = Partial<User>;
+
+
+
+type FollowItem = {
+  id: string;
+  avatar: string | null;
+  displayName: string | null;
+};
+
+type Following = {
+  id: string;
+  following: FollowItem;
+  createdAt: string;
+  updatedAt: string;
+};
+
+type Follower = {
+  id: string;
+  follower: FollowItem;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type GetUserFollowingResponse = ApiResponse<Following>;
+
+export type GetUserFollowersResponse = ApiResponse<Follower>;

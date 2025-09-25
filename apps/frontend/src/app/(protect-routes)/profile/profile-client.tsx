@@ -10,9 +10,10 @@ import { routes } from "@/lib/routes";
 import { formatDate, getInitials } from "@/lib/utils";
 import { Calendar, FileText, Users } from "lucide-react";
 import Link from "next/link";
-import ProfileSkeletonLoader from "../../../components/profile/profile-skeleton-loader";
-import FollowersList from "../../../components/profile/followers-list";
 import { useQueryState } from "nuqs";
+import FollowersList from "../../../components/profile/followers-list";
+import ProfileSkeletonLoader from "../../../components/profile/profile-skeleton-loader";
+import FollowingList from "@/components/profile/following-list";
 
 const ProfileClient = () => {
   const [tab, setTab] = useQueryState("tab");
@@ -128,9 +129,9 @@ const ProfileClient = () => {
               <FollowersList />
             </TabsContent>
 
-            {/* <TabsContent value="following" className="mt-6">
-            <FollowingList userId={userId} />
-          </TabsContent> */}
+            <TabsContent value="following" className="mt-6">
+              <FollowingList />
+            </TabsContent>
           </Tabs>
         </div>
       </SkeletonWrapper>
