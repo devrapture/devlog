@@ -15,7 +15,10 @@ import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { ApiAuthenticatedEndpoint } from 'src/common/decorators/api-responses.decorator';
 import { ResponseMessage } from 'src/common/decorators/response-message.decorator';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { UpdateUserProfileByIdResponseDto, UpdateUserProfileResponseDto } from './dto/user-response.dto';
+import {
+  UpdateUserProfileByIdResponseDto,
+  UpdateUserProfileResponseDto,
+} from './dto/user-response.dto';
 import { UsersService } from './users.service';
 
 @Controller('users')

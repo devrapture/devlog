@@ -15,7 +15,7 @@ export class FollowsService {
     @InjectRepository(User) private readonly userRepository: Repository<User>,
     @InjectRepository(Follow)
     private readonly followRepository: Repository<Follow>,
-  ) { }
+  ) {}
 
   async followUser(userId: string, followingId: string) {
     if (userId === followingId) {
@@ -120,7 +120,7 @@ export class FollowsService {
         'following.displayName',
         'following.avatar',
         'following.bio',
-        'follower.email',
+        'following.email',
       ])
       .orderBy('follow.createdAt', 'DESC')
       .skip(skip)

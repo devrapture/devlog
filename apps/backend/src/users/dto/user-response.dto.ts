@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsInt, IsString } from 'class-validator';
+import { IsEnum, IsInt, IsOptional, IsString } from 'class-validator';
 import { UserRole } from 'src/users/entities/user.entity';
 
 export class UserDto {
@@ -28,30 +28,38 @@ export class UserDto {
 
   @ApiProperty({
     type: String,
+    nullable: true,
   })
+  @IsOptional()
   @IsString()
   avatar: string;
 
   @ApiProperty({
     type: String,
+    nullable: true,
   })
+  @IsOptional()
   @IsString()
   bio: string;
 
   @ApiProperty({
     type: String,
+    nullable: true,
   })
   @IsString()
+  @IsOptional()
   displayName: string;
 
   @ApiProperty({
     type: String,
   })
+  @IsOptional()
   @IsString()
   lastLoginAt: string;
 
   @ApiProperty({
     type: Number,
+    nullable: true,
   })
   @IsInt()
   followingCount: number;
@@ -82,6 +90,14 @@ export class UserDataDto {
   user: UserDto;
 }
 
+export class UserProfileByIdDataDto {
+  @ApiProperty({ type: UserDto })
+  user: UserDto;
+
+  @ApiProperty({ type: Boolean })
+  isFollowing: boolean;
+}
+
 export class UpdateUserProfileResponseDto {
   @ApiProperty({
     example: true,
@@ -106,11 +122,6 @@ export class UpdateUserProfileByIdResponseDto {
   @ApiProperty()
   message: string;
 
-  @ApiProperty({ type: UserDataDto })
-  data: UserDataDto;
-
-  @ApiProperty({
-    type: Boolean,
-  })
-  isFollowing: boolean;
+  @ApiProperty({ type: UserProfileByIdDataDto })
+  data: UserProfileByIdDataDto;
 }

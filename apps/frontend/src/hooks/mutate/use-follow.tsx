@@ -30,7 +30,7 @@ export const useFollowUser = (cb?: () => void) => {
     },
     onError: (error) => {
       toast({
-        description: error?.response?.data?.message,
+        description: error?.response?.data?.message ?? "Something went wrong. Please try again.",
         variant: "destructive",
       });
     },
@@ -62,7 +62,7 @@ export const useUnFollowUser = (cb?: () => void) => {
     },
     onError: (error) => {
       toast({
-        description: error?.response?.data?.message,
+        description: error?.response?.data?.message ?? "Something went wrong. Please try again.",
         variant: "destructive",
       });
     },

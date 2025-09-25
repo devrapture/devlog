@@ -23,7 +23,7 @@ const UserCard = ({ user }: Props) => {
             </AvatarFallback>
           </Avatar>
           <Link
-            href={routes.userProfile(user?.id as unknown as string)}
+            href={user?.id ? routes.userProfile(user.id) : "#"}
             className="hover:text-primary"
           >
             <div className="min-w-0 flex-1">

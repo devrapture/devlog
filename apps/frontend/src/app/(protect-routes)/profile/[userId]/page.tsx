@@ -13,12 +13,13 @@ import { routes } from "@/lib/routes";
 import { formatDate, getInitials } from "@/lib/utils";
 import { Calendar, FileText, Loader2, Users } from "lucide-react";
 import { useSession } from "next-auth/react";
-import { redirect, useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useQueryState } from "nuqs";
 import pluralize from "pluralize";
 import { useEffect } from "react";
 
 const UserProfilePage = () => {
+  const router = useRouter();
   const [tab, setTab] = useQueryState("tab");
   const { userId } = useParams();
   const { data: session } = useSession();
@@ -33,7 +34,7 @@ const UserProfilePage = () => {
   const { mutate: unFollowUser, isPending: isUnFollowing } = useUnFollowUser();
   const profile = data?.user;
 
-  const isOwnProfile = session?.user?.id === userId;
+  const isOwnProfile = session?.user?.id === String(userId);
 
   const handleChangeTab = async (e: string) => await setTab(e);
 
@@ -47,7 +48,7 @@ const UserProfilePage = () => {
 
   useEffect(() => {
     if (isError && !isLoading) {
-      redirect(routes.root);
+      router.replace(routes.root);
     }
   }, [isError, isLoading]);
 
