@@ -24,7 +24,7 @@ const fileUploadApis = {
   uploadFile: (data: UploadFileRequest) => {
     const formData = new FormData();
     formData.append("file", data.file);
-    if (data.altText) {
+    if (data.altText !== undefined) {
       formData.append("altText", data.altText);
     }
 
