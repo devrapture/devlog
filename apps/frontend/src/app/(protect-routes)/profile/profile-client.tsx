@@ -1,5 +1,8 @@
 "use client";
 
+import FollowersList from "@/components/profile/followers-list";
+import FollowingList from "@/components/profile/following-list";
+import ProfileSkeletonLoader from "@/components/profile/profile-skeleton-loader";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader } from "@/components/ui/card";
@@ -11,9 +14,7 @@ import { formatDate, getInitials } from "@/lib/utils";
 import { Calendar, FileText, Users } from "lucide-react";
 import Link from "next/link";
 import { useQueryState } from "nuqs";
-import FollowingList from "@/components/profile/following-list";
-import ProfileSkeletonLoader from "@/components/profile/profile-skeleton-loader";
-import FollowersList from "@/components/profile/followers-list";
+import PostList from "./components/post-list";
 
 const ProfileClient = () => {
   const [tab, setTab] = useQueryState("tab");
@@ -69,7 +70,7 @@ const ProfileClient = () => {
                     <div className="flex items-center gap-1">
                       <FileText className="h-4 w-4" />
                       {/* TODO add post count in backend */}
-                       {/* @ts-expect-error will fix this from backend */}
+                      {/* @ts-expect-error will fix this from backend */}
                       <span>{profile?.postsCount ?? 0} posts</span>
                     </div>
                     <div className="flex items-center gap-1">
@@ -102,28 +103,10 @@ const ProfileClient = () => {
               <TabsTrigger value="followers">Followers</TabsTrigger>
               <TabsTrigger value="following">Following</TabsTrigger>
             </TabsList>
-            {/* 
-            <TabsContent value="posts" className="mt-6">
-            <div className="space-y-4">
-              {!postsLoading && posts.length === 0 && (
-                <div className="py-12 text-center">
-                  <p className="text-muted-foreground">No posts yet</p>
-                </div>
-              )}
 
-              {postsLoading ? (
-                <div className="flex items-center justify-center py-12">
-                  <Loader2 className="text-primary h-8 w-8 animate-spin" />
-                </div>
-              ) : (
-                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                  {posts.map((post) => (
-                    <PostCard key={post.id} post={post} showAuthor={false} />
-                  ))}
-                </div>
-              )}
-            </div>
-          </TabsContent> */}
+            <TabsContent value="posts" className="mt-6">
+              <PostList />
+            </TabsContent>
 
             <TabsContent value="followers" className="mt-6">
               <FollowersList />

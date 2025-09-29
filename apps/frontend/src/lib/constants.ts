@@ -1,0 +1,1 @@
+export const MAX_MB = 1;

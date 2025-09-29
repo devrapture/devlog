@@ -172,7 +172,7 @@ export class PostsController {
     200,
     PublishResponseDtoWithPagination,
   )
-  getAllPostsByAuthorById(@Param('slug') slug: string, @Req() req: Request) {
+  getPostsBySlug(@Param('slug') slug: string, @Req() req: Request) {
     const ipAddress = req.socket.remoteAddress || 'unknown';
     const userAgent = req.headers['user-agent'];
     return this.postsService.getPostBySlug(

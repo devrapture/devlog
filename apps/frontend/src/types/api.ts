@@ -34,6 +34,30 @@ export interface Category {
   updatedAt: string;
 }
 
+export interface Author {
+  id: string;
+  displayName: string;
+  avatar: string;
+}
+
+export type Post = {
+  id: string;
+  title: string;
+  body: string;
+  status: string;
+  coverImage: string;
+  slug: null | string;
+  publishedAt: null | string;
+  views: number;
+  likesCount: number;
+  comments: number;
+  bookmarkCount: number;
+  categories: Category[];
+  author?: Author;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export interface User {
   id: string;
   role: string;
@@ -72,6 +96,8 @@ export type GetUserProfileByIdResponse = ApiBaseResponse<{
   isFollowing: boolean;
 }>;
 
+export type PublishPostResponse = ApiBaseResponse<Post>;
+
 export type UserUpdate = Partial<User>;
 
 type FollowItem = {
@@ -97,3 +123,15 @@ type Follower = {
 export type GetUserFollowingResponse = ApiResponse<Following>;
 
 export type GetUserFollowersResponse = ApiResponse<Follower>;
+
+export type PostResponse = ApiResponse<Post>;
+
+export type SingleResponse = ApiBaseResponse<Post>;
+
+export type GetPostBySlugResponse = ApiBaseResponse<{
+  post: Post;
+}>;
+
+export type GetDraftByIdResponse = ApiBaseResponse<{
+  draft: Partial<Post>;
+}>;
