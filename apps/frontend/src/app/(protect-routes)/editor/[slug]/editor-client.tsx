@@ -37,7 +37,7 @@ import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { useQueryState } from "nuqs";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { AutoSavedStatus } from "./extras";
+import { AutoSavedStatus, type EditorState } from "./extras";
 
 const EditorClientPage = () => {
   const { slug } = useParams();
@@ -79,7 +79,9 @@ const EditorClientPage = () => {
       : [...selectedCategories, categoryId];
 
     updateState({ selectedCategories: newCategories });
-    await handleSaveDraft();
+    await handleSaveDraft({
+      selectedCategories: newCategories,
+    });
   };
 
   const handleFileUpload = useCallback(
@@ -93,7 +95,9 @@ const EditorClientPage = () => {
           altText: `Cover image for ${title || "untitled post"}`,
         });
         updateState({ coverImage: result });
-        await handleSaveDraft();
+        await handleSaveDraft({
+          coverImage: result,
+        });
       } catch (error) {
         toast({
           description: isAxiosError<{ message: string }>(error)
@@ -137,36 +141,49 @@ const EditorClientPage = () => {
     await handleSaveDraft();
   };
 
-  const handleSaveDraft = useCallback(async () => {
-    if (!slug || !isInitializedRef.current) return;
+  const handleSaveDraft = useCallback(
+    async (
+      overrides?: Partial<
+        Pick<
+          EditorState,
+          "title" | "body" | "selectedCategories" | "coverImage"
+        >
+      >,
+    ) => {
+      if (!slug || !isInitializedRef.current) return;
 
-    setAutoSaveStatus(AutoSavedStatus.SAVING);
-    try {
-      // Update existing draft
-      const res = await updateDraftMutation.mutateAsync({
-        draftId: String(slug),
-        data: {
-          title: title?.trim(),
-          body: body?.trim(),
-          categories:
-            selectedCategories.length > 0 ? selectedCategories : undefined,
-          coverImage: coverImage?.url,
-        },
-      });
-      if (res) {
-        setAutoSaveStatus(AutoSavedStatus.SAVED);
+      setAutoSaveStatus(AutoSavedStatus.SAVING);
+      try {
+        // Update existing draft
+        const res = await updateDraftMutation.mutateAsync({
+          draftId: String(slug),
+          data: {
+            title: (overrides?.title ?? title)?.trim(),
+            body: (overrides?.body ?? body)?.trim(),
+            categories: (overrides?.selectedCategories ?? selectedCategories)
+              .length
+              ? (overrides?.selectedCategories ?? selectedCategories)
+              : undefined,
+            coverImage: (overrides?.coverImage ?? coverImage)?.url,
+          },
+        });
+
+        if (res) {
+          setAutoSaveStatus(AutoSavedStatus.SAVED);
+        }
+      } catch (error: unknown) {
+        setAutoSaveStatus(AutoSavedStatus.ERROR);
+        toast({
+          description: isAxiosError<{ message: string }>(error)
+            ? (error.response?.data?.message ??
+              "Something went wrong. Please try again.")
+            : "Something went wrong. Please try again.",
+          variant: "destructive",
+        });
       }
-    } catch (error: unknown) {
-      setAutoSaveStatus(AutoSavedStatus.ERROR);
-      toast({
-        description: isAxiosError<{ message: string }>(error)
-          ? (error.response?.data?.message ??
-            "Something went wrong. Please try again.")
-          : "Something went wrong. Please try again.",
-        variant: "destructive",
-      });
-    }
-  }, [slug, title, body, selectedCategories, coverImage, updateDraftMutation]);
+    },
+    [slug, title, body, selectedCategories, coverImage, updateDraftMutation],
+  );
 
   const handlePublish = async () => {
     if (
@@ -187,7 +204,16 @@ const EditorClientPage = () => {
         coverImage: coverImage.url!,
       },
     });
-    router.push(routes.postBySlug(res?.data?.slug ?? ""));
+
+    const newSlug = res?.data?.slug;
+    if (!newSlug) {
+      toast({
+        description: "Publish succeeded but slug missing.",
+        variant: "destructive",
+      });
+      return;
+    }
+    router.push(routes.postBySlug(newSlug));
   };
 
   const insertMarkdown = (syntax: string, placeholder = "") => {
