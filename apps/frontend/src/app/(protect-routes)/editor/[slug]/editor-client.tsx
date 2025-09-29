@@ -138,7 +138,9 @@ const EditorClientPage = () => {
 
   const removeCoverImage = async () => {
     updateState({ coverImage: null });
-    await handleSaveDraft();
+    await handleSaveDraft({
+      coverImage: null,
+    });
   };
 
   const handleSaveDraft = useCallback(
@@ -271,8 +273,8 @@ const EditorClientPage = () => {
         body: draft.draft.body ?? "",
         coverImage: draft.draft.coverImage
           ? {
-            url: draft.draft.coverImage,
-          }
+              url: draft.draft.coverImage,
+            }
           : null,
         selectedCategories: draft.draft.categories?.map((c) => c.id) ?? [],
       });
@@ -532,8 +534,9 @@ const EditorClientPage = () => {
                     }
                     value={body}
                     onChange={(e) => updateState({ body: e.target.value })}
-                    className={`min-h-[400px] text-sm ${editorMode === "markdown" ? "font-mono" : ""
-                      }`}
+                    className={`min-h-[400px] text-sm ${
+                      editorMode === "markdown" ? "font-mono" : ""
+                    }`}
                   />
                 </TabsContent>
 
