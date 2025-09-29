@@ -12,12 +12,12 @@ import { useEditorState } from "@/hooks/logic/use-editor-state";
 import { toast } from "@/hooks/logic/use-toast";
 import { useUploadFile } from "@/hooks/mutate/use-file-upload";
 import {
-  useCreateDraft,
   usePublishPost,
-  useUpdateDraft,
+  useUpdateDraft
 } from "@/hooks/mutate/use-posts";
 import { useGetCategories } from "@/hooks/query/use-categories";
 import { useGetDraftById } from "@/hooks/query/use-posts";
+import { MAX_MB } from "@/lib/constants";
 import { routes } from "@/lib/routes";
 import { isAxiosError } from "axios";
 import DOMPurify from "isomorphic-dompurify";
@@ -67,7 +67,6 @@ const EditorClientPage = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const uploadFileMutation = useUploadFile();
-  const createDraftMutation = useCreateDraft();
   const updateDraftMutation = useUpdateDraft();
   const publishPostMutation = usePublishPost();
 
@@ -88,6 +87,13 @@ const EditorClientPage = () => {
     async (file: File) => {
       if (!file) return;
 
+      if (file.size > MAX_MB * 1024 * 1024) {
+        toast({
+          description: `Image too large. Max ${MAX_MB}MB.`,
+          variant: "destructive",
+        });
+        return;
+      }
       setIsUploading(true);
       try {
         const result = await uploadFileMutation.mutateAsync({
@@ -197,25 +203,35 @@ const EditorClientPage = () => {
       return;
     }
 
-    const res = await publishPostMutation.mutateAsync({
-      draftId: String(slug),
-      data: {
-        title: title.trim(),
-        body: body.trim(),
-        categories: selectedCategories,
-        coverImage: coverImage.url!,
-      },
-    });
+    try {
+      const res = await publishPostMutation.mutateAsync({
+        draftId: String(slug),
+        data: {
+          title: title.trim(),
+          body: body.trim(),
+          categories: selectedCategories,
+          coverImage: coverImage.url!,
+        },
+      });
 
-    const newSlug = res?.data?.slug;
-    if (!newSlug) {
+      const newSlug = res?.data?.slug;
+      if (!newSlug) {
+        toast({
+          description: "Publish succeeded but slug missing.",
+          variant: "destructive",
+        });
+        return;
+      }
+      router.push(routes.postBySlug(newSlug));
+    } catch (error) {
       toast({
-        description: "Publish succeeded but slug missing.",
+        description: isAxiosError<{ message: string }>(error)
+          ? (error.response?.data?.message ??
+            "Publish failed. Please try again.")
+          : "Publish failed. Please try again.",
         variant: "destructive",
       });
-      return;
     }
-    router.push(routes.postBySlug(newSlug));
   };
 
   const insertMarkdown = (syntax: string, placeholder = "") => {
@@ -267,20 +283,19 @@ const EditorClientPage = () => {
   };
 
   useEffect(() => {
-    if (draft) {
-      updateState({
-        title: draft.draft.title ?? "",
-        body: draft.draft.body ?? "",
-        coverImage: draft.draft.coverImage
-          ? {
-              url: draft.draft.coverImage,
-            }
-          : null,
-        selectedCategories: draft.draft.categories?.map((c) => c.id) ?? [],
-      });
+    if (!draft || isInitializedRef.current) return;
+    updateState({
+      title: draft.draft.title ?? "",
+      body: draft.draft.body ?? "",
+      coverImage: draft.draft.coverImage
+        ? {
+          url: draft.draft.coverImage,
+        }
+        : null,
+      selectedCategories: draft.draft.categories?.map((c) => c.id) ?? [],
+    });
 
-      isInitializedRef.current = true;
-    }
+    isInitializedRef.current = true;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [draft]);
 
@@ -345,7 +360,6 @@ const EditorClientPage = () => {
           <Button
             onClick={handlePublish}
             disabled={
-              createDraftMutation.isPending ||
               publishPostMutation.isPending ||
               !title?.trim() ||
               !body?.trim() ||
@@ -353,7 +367,7 @@ const EditorClientPage = () => {
               !coverImage
             }
           >
-            {createDraftMutation.isPending || publishPostMutation.isPending ? (
+            {publishPostMutation.isPending ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
               <Send className="mr-2 h-4 w-4" />
@@ -534,9 +548,8 @@ const EditorClientPage = () => {
                     }
                     value={body}
                     onChange={(e) => updateState({ body: e.target.value })}
-                    className={`min-h-[400px] text-sm ${
-                      editorMode === "markdown" ? "font-mono" : ""
-                    }`}
+                    className={`min-h-[400px] text-sm ${editorMode === "markdown" ? "font-mono" : ""
+                      }`}
                   />
                 </TabsContent>
 
