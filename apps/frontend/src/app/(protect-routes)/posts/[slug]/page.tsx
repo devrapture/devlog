@@ -1,6 +1,7 @@
 "use client";
 
 import SocialActions from "@/components/socials/social-actions";
+import DOMPurify from "isomorphic-dompurify";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -34,6 +35,18 @@ const BlogPostPage = () => {
     });
     router.replace(routes.editor(res?.data?.id));
   };
+
+  const rawHtml = (post?.body ?? "")
+    .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+    .replace(/\*(.*?)\*/g, "<em>$1</em>")
+    .replace(
+      /`(.*?)`/g,
+      '<code class="bg-muted px-1 py-0.5 rounded text-sm">$1</code>',
+    )
+    .replace(/\n/g, "<br>");
+  const safeHtml = DOMPurify.sanitize(rawHtml, {
+    USE_PROFILES: { html: true },
+  });
 
   if (isLoading) {
     return (
@@ -82,9 +95,9 @@ const BlogPostPage = () => {
           )}
 
           <div className="mb-4 flex flex-wrap gap-2">
-            {post?.categories.map((category) => (
+            {post?.categories?.map((category) => (
               <Badge
-                key={category.id}
+                key={category?.id}
                 variant="secondary"
                 className="capitalize"
               >
@@ -126,7 +139,7 @@ const BlogPostPage = () => {
 
                     <div className="flex items-center gap-1">
                       <Eye className="h-4 w-4" />
-                      {pluralize("view", post?.views, true)}
+                      {pluralize("view", post?.views ?? 0, true)}
                     </div>
                   </div>
                 </div>
@@ -142,16 +155,7 @@ const BlogPostPage = () => {
           <CardContent className="p-8">
             <div
               className="prose prose-lg max-w-none"
-              dangerouslySetInnerHTML={{
-                __html: (post?.body ?? "")
-                  .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-                  .replace(/\*(.*?)\*/g, "<em>$1</em>")
-                  .replace(
-                    /`(.*?)`/g,
-                    '<code class="bg-muted px-1 py-0.5 rounded text-sm">$1</code>',
-                  )
-                  .replace(/\n/g, "<br>"),
-              }}
+              dangerouslySetInnerHTML={{ __html: safeHtml }}
             />
           </CardContent>
         </Card>

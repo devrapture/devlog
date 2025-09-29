@@ -5,6 +5,7 @@ import FeedTabs from "@/components/feed/feed-tabs";
 import { WelcomeHero } from "@/components/feed/welcome-hero";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useToast } from "@/hooks/logic/use-toast";
 import { useCreateDraft } from "@/hooks/mutate/use-posts";
 import { routes } from "@/lib/routes";
 import { BookOpen, Calendar, Loader2, TrendingUp, Users } from "lucide-react";
@@ -15,13 +16,22 @@ import { Suspense } from "react";
 
 export default function HomePage() {
   const { status } = useSession();
+  const { toast } = useToast();
   const router = useRouter();
   const { mutateAsync: createDraft, isPending: isCreatingDraft } =
     useCreateDraft();
 
   const handleCreateDraft = async () => {
     const res = await createDraft();
-    router.push(routes.editor(res?.data?.draft?.id ?? ""));
+    const id = res?.data?.draft?.id;
+    if (!id) {
+      toast({
+        description: "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+    router.push(routes.editor(id));
   };
 
   const isAuthenticated = status === "authenticated";

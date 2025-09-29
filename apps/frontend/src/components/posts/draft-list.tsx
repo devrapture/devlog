@@ -83,12 +83,12 @@ const DraftList = () => {
                   </p>
                 </div>
                 <div className="flex gap-2">
-                  <Link href={routes.editor(draft.id)}>
-                    <Button size="sm" variant="outline">
+                  <Button asChild size="sm" variant="outline">
+                    <Link href={routes.editor(draft.id)}>
                       <Pencil className="mr-1 h-4 w-4" />
                       Edit
-                    </Button>
-                  </Link>
+                    </Link>
+                  </Button>
                   <AlertDialog onOpenChange={() => handleOpenDialog(draft.id)}>
                     <AlertDialogTrigger asChild>
                       <Button size="sm" className="cursor-pointer">
@@ -139,7 +139,7 @@ const DraftList = () => {
                         </AlertDialogTitle>
                         <AlertDialogDescription>
                           This action cannot be undone. This will permanently
-                          delete your account and remove your data from our
+                          delete this draft and remove your data from our
                           servers.
                         </AlertDialogDescription>
                       </AlertDialogHeader>

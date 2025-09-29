@@ -1,3 +1,4 @@
+"use client";
 import type { Post } from "@/types/api";
 
 import { Button } from "@/components/ui/button";
@@ -12,33 +13,40 @@ type Props = {
 const SocialActions = ({ post, className, size = "sm" }: Props) => {
   const { toast } = useToast();
   const handleShare = async () => {
-    const url = `${window.location.origin}/posts/${post?.slug}`;
-
+    const slug = post?.slug;
+    if (!slug) {
+      toast({
+        description: "Post link not available",
+        variant: "destructive",
+      });
+      return;
+    }
+    const url = `${window.location.origin}/posts/${slug}`;
+    const text =
+      (post?.body ? post.body.replace(/<[^>]*>/g, "").slice(0, 100) : "") +
+      "...";
     if (navigator.share) {
       try {
         await navigator.share({
           title: post?.title,
-          text: post?.body.replace(/<[^>]*>/g, "").substring(0, 100) + "...",
+          text,
           url,
         });
-      } catch {
-        toast({
-          description: "Sorry, your browser doesn't support sharing.",
-          variant: "destructive",
-        });
+      } catch (error: unknown) {
+        // @ts-expect-error - unknown error
+        if (error?.name === "AbortError") return;
       }
-    } else {
-      try {
-        await navigator.clipboard.writeText(url);
-        toast({
-          description: "Link copied to clipboard",
-        });
-      } catch {
-        toast({
-          description: "Sorry, your browser doesn't support copying.",
-          variant: "destructive",
-        });
-      }
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      toast({
+        description: "Link copied to clipboard",
+      });
+    } catch {
+      toast({
+        description: "Sorry, your browser doesn't support copying.",
+        variant: "destructive",
+      });
     }
   };
   return (

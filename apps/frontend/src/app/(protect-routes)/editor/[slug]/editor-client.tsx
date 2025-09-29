@@ -20,6 +20,7 @@ import { useGetCategories } from "@/hooks/query/use-categories";
 import { useGetDraftById } from "@/hooks/query/use-posts";
 import { routes } from "@/lib/routes";
 import { isAxiosError } from "axios";
+import DOMPurify from "isomorphic-dompurify";
 import {
   Bold,
   Code,
@@ -136,39 +137,36 @@ const EditorClientPage = () => {
     await handleSaveDraft();
   };
 
-  const handleSaveDraft = useCallback(
-    async () => {
-      if (!slug || !isInitializedRef.current) return;
+  const handleSaveDraft = useCallback(async () => {
+    if (!slug || !isInitializedRef.current) return;
 
-      setAutoSaveStatus(AutoSavedStatus.SAVING);
-      try {
-        // Update existing draft
-        const res = await updateDraftMutation.mutateAsync({
-          draftId: String(slug),
-          data: {
-            title: title?.trim(),
-            body: body?.trim(),
-            categories:
-              selectedCategories.length > 0 ? selectedCategories : undefined,
-            coverImage: coverImage?.url,
-          },
-        });
-        if (res) {
-          setAutoSaveStatus(AutoSavedStatus.SAVED);
-        }
-      } catch (error: unknown) {
-        setAutoSaveStatus(AutoSavedStatus.ERROR);
-        toast({
-          description: isAxiosError<{ message: string }>(error)
-            ? (error.response?.data?.message ??
-              "Something went wrong. Please try again.")
-            : "Something went wrong. Please try again.",
-          variant: "destructive",
-        });
+    setAutoSaveStatus(AutoSavedStatus.SAVING);
+    try {
+      // Update existing draft
+      const res = await updateDraftMutation.mutateAsync({
+        draftId: String(slug),
+        data: {
+          title: title?.trim(),
+          body: body?.trim(),
+          categories:
+            selectedCategories.length > 0 ? selectedCategories : undefined,
+          coverImage: coverImage?.url,
+        },
+      });
+      if (res) {
+        setAutoSaveStatus(AutoSavedStatus.SAVED);
       }
-    },
-    [slug, title, body, selectedCategories, coverImage, updateDraftMutation],
-  );
+    } catch (error: unknown) {
+      setAutoSaveStatus(AutoSavedStatus.ERROR);
+      toast({
+        description: isAxiosError<{ message: string }>(error)
+          ? (error.response?.data?.message ??
+            "Something went wrong. Please try again.")
+          : "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+    }
+  }, [slug, title, body, selectedCategories, coverImage, updateDraftMutation]);
 
   const handlePublish = async () => {
     if (
@@ -243,19 +241,20 @@ const EditorClientPage = () => {
   useEffect(() => {
     if (draft) {
       updateState({
-        title: draft.draft.title,
-        body: draft.draft.body,
-        coverImage: {
-          url: draft.draft.coverImage,
-        },
-        selectedCategories: draft.draft.categories?.map((c) => c.id),
+        title: draft.draft.title ?? "",
+        body: draft.draft.body ?? "",
+        coverImage: draft.draft.coverImage
+          ? {
+            url: draft.draft.coverImage,
+          }
+          : null,
+        selectedCategories: draft.draft.categories?.map((c) => c.id) ?? [],
       });
 
       isInitializedRef.current = true;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [draft]);
-
 
   // Auto-save on title change (debounced)
   useEffect(() => {
@@ -519,30 +518,57 @@ const EditorClientPage = () => {
                         editorMode === "markdown" ? (
                           <div
                             dangerouslySetInnerHTML={{
-                              __html: body
-                                .replace(
-                                  /\*\*(.*?)\*\*/g,
-                                  "<strong>$1</strong>",
-                                )
-                                .replace(/\*(.*?)\*/g, "<em>$1</em>")
-                                .replace(/`(.*?)`/g, "<code>$1</code>")
-                                .replace(/^### (.*$)/gim, "<h3>$1</h3>")
-                                .replace(/^## (.*$)/gim, "<h2>$1</h2>")
-                                .replace(/^# (.*$)/gim, "<h1>$1</h1>")
-                                .replace(/^\* (.*$)/gim, "<li>$1</li>")
-                                .replace(/^\d+\. (.*$)/gim, "<li>$1</li>")
-                                .replace(
-                                  /\[([^\]]+)\]\(([^)]+)\)/g,
-                                  '<a href="$2">$1</a>',
-                                )
-                                .replace(
-                                  /!\[([^\]]*)\]\(([^)]+)\)/g,
-                                  '<img src="$2" alt="$1" />',
-                                )
-                                .replace(/\n/g, "<br>"),
+                              __html: DOMPurify.sanitize(
+                                body
+                                  .replace(
+                                    /\*\*(.*?)\*\*/g,
+                                    "<strong>$1</strong>",
+                                  )
+                                  .replace(/\*(.*?)\*/g, "<em>$1</em>")
+                                  .replace(/`(.*?)`/g, "<code>$1</code>")
+                                  .replace(/^### (.*$)/gim, "<h3>$1</h3>")
+                                  .replace(/^## (.*$)/gim, "<h2>$1</h2>")
+                                  .replace(/^# (.*$)/gim, "<h1>$1</h1>")
+                                  .replace(/^\* (.*$)/gim, "<li>$1</li>")
+                                  .replace(/^\d+\. (.*$)/gim, "<li>$1</li>")
+                                  .replace(
+                                    /\[([^\]]+)\]\(([^)]+)\)/g,
+                                    '<a href="$2">$1</a>',
+                                  )
+                                  .replace(
+                                    /!\[([^\]]*)\]\(([^)]+)\)/g,
+                                    '<img src="$2" alt="$1" />',
+                                  )
+                                  .replace(/\n/g, "<br>"),
+                              ),
                             }}
                           />
                         ) : (
+                          // <div
+                          //   dangerouslySetInnerHTML={{
+                          //     __html: body
+                          //       .replace(
+                          //         /\*\*(.*?)\*\*/g,
+                          //         "<strong>$1</strong>",
+                          //       )
+                          //       .replace(/\*(.*?)\*/g, "<em>$1</em>")
+                          //       .replace(/`(.*?)`/g, "<code>$1</code>")
+                          //       .replace(/^### (.*$)/gim, "<h3>$1</h3>")
+                          //       .replace(/^## (.*$)/gim, "<h2>$1</h2>")
+                          //       .replace(/^# (.*$)/gim, "<h1>$1</h1>")
+                          //       .replace(/^\* (.*$)/gim, "<li>$1</li>")
+                          //       .replace(/^\d+\. (.*$)/gim, "<li>$1</li>")
+                          //       .replace(
+                          //         /\[([^\]]+)\]\(([^)]+)\)/g,
+                          //         '<a href="$2">$1</a>',
+                          //       )
+                          //       .replace(
+                          //         /!\[([^\]]*)\]\(([^)]+)\)/g,
+                          //         '<img src="$2" alt="$1" />',
+                          //       )
+                          //       .replace(/\n/g, "<br>"),
+                          //   }}
+                          // />
                           <div className="whitespace-pre-wrap">{body}</div>
                         )
                       ) : (

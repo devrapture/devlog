@@ -2,19 +2,28 @@
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { useToast } from "@/hooks/logic/use-toast";
 import { useCreateDraft } from "@/hooks/mutate/use-posts";
 import { routes } from "@/lib/routes";
-// import { useAuth } from "@/hooks/use-auth"
 import { BookOpen, Loader2, PenTool, Users, Zap } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 export function WelcomeHero() {
   const router = useRouter();
+  const { toast } = useToast();
   const { mutateAsync: createDraft, isPending: isCreatingDraft } =
     useCreateDraft();
   const handleCreateDraft = async () => {
     const res = await createDraft();
-    router.push(routes.editor(res?.data?.draft?.id ?? ""));
+    const id = res?.data?.draft?.id;
+    if (!id) {
+      toast({
+        description: "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+    router.push(routes.editor(id));
   };
 
   return (

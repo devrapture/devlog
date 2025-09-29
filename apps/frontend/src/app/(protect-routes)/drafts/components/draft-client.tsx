@@ -2,19 +2,29 @@
 
 import DraftList from "@/components/posts/draft-list";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/logic/use-toast";
 import { useCreateDraft } from "@/hooks/mutate/use-posts";
 import { routes } from "@/lib/routes";
 import { Loader2, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 const DraftClient = () => {
+  const { toast } = useToast();
   const router = useRouter();
   const { mutateAsync: createDraft, isPending: isCreatingDraft } =
     useCreateDraft();
 
   const handleCreateDraft = async () => {
     const res = await createDraft();
-    router.push(routes.editor(res?.data?.draft?.id ?? ""));
+    const id = res?.data?.draft?.id;
+    if (!id) {
+      toast({
+        description: "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+    router.push(routes.editor(id));
   };
   return (
     <div className="container mx-auto px-4 py-8">
