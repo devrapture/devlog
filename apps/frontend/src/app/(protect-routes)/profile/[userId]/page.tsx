@@ -1,5 +1,6 @@
 "use client";
 
+import PostCard from "@/components/posts/post-card";
 import ProfileSkeletonLoader from "@/components/profile/profile-skeleton-loader";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -8,6 +9,7 @@ import { Card, CardHeader } from "@/components/ui/card";
 import SkeletonWrapper from "@/components/ui/skeleton-wrapper";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useFollowUser, useUnFollowUser } from "@/hooks/mutate/use-follow";
+import { useGetPostByAuthor } from "@/hooks/query/use-posts";
 import { useGetUserProfileById } from "@/hooks/query/use-user";
 import { routes } from "@/lib/routes";
 import { formatDate, getInitials } from "@/lib/utils";
@@ -30,6 +32,10 @@ const UserProfilePage = () => {
     enabled: !!userId,
   });
 
+  const { data: posts, isLoading: isLoadingPosts } = useGetPostByAuthor(
+    userId as string,
+  );
+
   const { mutate: followUser, isPending: isFollowing } = useFollowUser();
   const { mutate: unFollowUser, isPending: isUnFollowing } = useUnFollowUser();
   const profile = data?.user;
@@ -50,6 +56,7 @@ const UserProfilePage = () => {
     if (isError && !isLoading) {
       router.replace(routes.root);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isError, isLoading]);
 
   return (
@@ -157,28 +164,28 @@ const UserProfilePage = () => {
               <TabsTrigger value="followers">Followers</TabsTrigger>
               <TabsTrigger value="following">Following</TabsTrigger>
             </TabsList>
-            {/* 
-            <TabsContent value="posts" className="mt-6">
-            <div className="space-y-4">
-              {!postsLoading && posts.length === 0 && (
-                <div className="py-12 text-center">
-                  <p className="text-muted-foreground">No posts yet</p>
-                </div>
-              )}
 
-              {postsLoading ? (
-                <div className="flex items-center justify-center py-12">
-                  <Loader2 className="text-primary h-8 w-8 animate-spin" />
-                </div>
-              ) : (
-                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                  {posts.map((post) => (
-                    <PostCard key={post.id} post={post} showAuthor={false} />
-                  ))}
-                </div>
-              )}
-            </div>
-          </TabsContent> */}
+            <TabsContent value="posts" className="mt-6">
+              <div className="space-y-4">
+                {!isLoadingPosts && posts?.data?.items?.length === 0 && (
+                  <div className="py-12 text-center">
+                    <p className="text-muted-foreground">No posts yet</p>
+                  </div>
+                )}
+
+                {isLoadingPosts ? (
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="text-primary h-8 w-8 animate-spin" />
+                  </div>
+                ) : (
+                  <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                    {posts?.data?.items?.map((post) => (
+                      <PostCard key={post.id} post={post} showAuthor={false} />
+                    ))}
+                  </div>
+                )}
+              </div>
+            </TabsContent>
 
             <TabsContent value="followers" className="mt-6">
               {/* <FollowersList /> */}

@@ -5,11 +5,13 @@ import type React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/logic/use-toast";
+import { useCreateDraft } from "@/hooks/mutate/use-posts";
 import { routes } from "@/lib/routes";
 import { getInitials } from "@/lib/utils";
 import {
   Bookmark,
   FileText,
+  Loader2,
   LogOut,
   Menu,
   PenTool,
@@ -20,6 +22,7 @@ import {
 } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import {
@@ -31,12 +34,21 @@ import {
 } from "../ui/dropdown-menu";
 import { Skeleton } from "../ui/skeleton";
 
-
 export function Header() {
   const { data: session, status } = useSession();
+  const router = useRouter();
+
   const [searchQuery, setSearchQuery] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { toast } = useToast();
+
+  const { mutateAsync: createDraft, isPending: isCreatingDraft } =
+    useCreateDraft();
+
+  const handleCreateDraft = async () => {
+    const res = await createDraft();
+    router.push(routes.editor(res?.data?.draft?.id ?? ""));
+  };
 
   const handleLogout = async () => {
     try {
@@ -123,16 +135,20 @@ export function Header() {
           <div className="hidden items-center gap-4 md:flex">
             {session?.user ? (
               <>
-                <Link href="/editor">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="flex items-center gap-2"
-                  >
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="flex items-center gap-2 cursor-pointer"
+                  onClick={handleCreateDraft}
+                  disabled={isCreatingDraft}
+                >
+                  {isCreatingDraft ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
                     <PenTool className="h-4 w-4" />
-                    Write
-                  </Button>
-                </Link>
+                  )}
+                  Write
+                </Button>
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>

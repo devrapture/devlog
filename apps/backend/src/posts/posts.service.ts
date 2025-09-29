@@ -141,6 +141,7 @@ export class PostsService {
         },
         status: PostStatus.DRAFT,
       },
+      relations: ['categories'],
     });
     if (!userDraft) {
       throw new NotFoundException('Draft not found');
@@ -428,7 +429,7 @@ export class PostsService {
       },
     });
 
-    if (!post) {
+    if (!post || post.status === PostStatus.DRAFT) {
       throw new NotFoundException('Post not found');
     }
 

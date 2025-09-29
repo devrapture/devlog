@@ -7,4 +7,7 @@ export const routes = {
   profile: "/profile",
   editProfile: "/profile/edit",
   userProfile: (userId: string) => `/profile/${userId}`,
+  drafts: "/drafts",
+  editor: (draftId: string) => `/editor/${draftId}`,
+  postBySlug: (slug: string) => `/posts/${slug}`,
 };

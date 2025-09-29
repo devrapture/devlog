@@ -5,6 +5,12 @@
 import "./src/env.js";
 
 /** @type {import("next").NextConfig} */
-const config = {};
+const config = {
+    images: {
+        remotePatterns: [
+          new URL("https://res.cloudinary.com/dgm8zpg94/image/upload/**"),
+        ],
+      },
+};
 
 export default config;

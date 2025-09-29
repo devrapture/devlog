@@ -18,8 +18,25 @@ export const getInitials = (name: string) => {
 export const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString("en-US", {
     year: "numeric",
-    month: "long",
+    month: "short",
+    day: "numeric",
   })
+}
+
+export const getAuthorInitials = (name: string) => {
+  return name
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+};
+
+export const getReadingTime = (content: string) => {
+  const wordsPerMinute = 200
+  const words = content.replace(/<[^>]*>/g, "").split(/\s+/).length
+  const minutes = Math.ceil(words / wordsPerMinute)
+  return `${minutes} min read`
 }
 
 export const dynamicQueryEndpoint = (
