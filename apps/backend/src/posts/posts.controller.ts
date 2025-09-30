@@ -195,7 +195,7 @@ export class PostsController {
     return this.postsService.deletePost(userId, postId);
   }
 
-  @Get(':authorId')
+  @Get('author/:authorId')
   @ApiUnAuthenticatedEndpoint(
     'Get all published posts for public view by author',
     200,

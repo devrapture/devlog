@@ -65,3 +65,37 @@ export const useGetFollowing = () => {
     query,
   };
 };
+
+export const useGetFollowingForUser = (userId: string) => {
+  const [query, setQuery] = useState<QueryParams>({
+    page: 1,
+    limit: 5,
+  });
+
+  const updateQuery = <K extends keyof QueryParams>(
+    field: K,
+    value: QueryParams[K],
+  ) => {
+    setQuery((prevQuery) => ({
+      ...prevQuery,
+      [field]: value,
+    }));
+  };
+
+  const { ...rest } = useQuery({
+    queryKey: ["get-following-for-user", userId, query],
+    queryFn: async () => {
+      const res = await followApis.getFollowingForUser(
+        userId,
+        dynamicQueryEndpoint(query),
+      );
+      return res?.data?.data;
+    },
+  });
+
+  return {
+    ...rest,
+    updateQuery,
+    query,
+  };
+};

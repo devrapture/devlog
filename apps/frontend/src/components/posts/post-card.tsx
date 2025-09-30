@@ -69,7 +69,7 @@ const PostCard = ({ post, showAuthor }: Props) => {
 
             <CardContent className="pt-0">
                 <p className="text-muted-foreground mb-4 line-clamp-3 text-sm">
-                    {post.body.replace(/<[^>]*>/g, "").substring(0, 150)}...
+                    {post?.body?.replace(/<[^>]*>/g, "").substring(0, 150)}...
                 </p>
 
                 {/* <SocialActions post={post} /> */}

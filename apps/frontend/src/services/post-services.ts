@@ -42,7 +42,7 @@ const postApis = {
     getAllPosts: (query: string) =>
       serverWithInterceptors.get<PostResponse>(`/posts${query}`),
     getPostByAuthor: (authorId: string, query: string) =>
-      serverWithInterceptors.get<PostResponse>(`/posts/${authorId}${query}`),
+      serverWithInterceptors.get<PostResponse>(`/posts/author/${authorId}${query}`),
   },
 };
 

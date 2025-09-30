@@ -15,7 +15,7 @@ export class FollowsService {
     @InjectRepository(User) private readonly userRepository: Repository<User>,
     @InjectRepository(Follow)
     private readonly followRepository: Repository<Follow>,
-  ) {}
+  ) { }
 
   async followUser(userId: string, followingId: string) {
     if (userId === followingId) {
@@ -160,6 +160,43 @@ export class FollowsService {
       .take(limit);
 
     const [items, totalItems] = await queryBuilder.getManyAndCount();
+    const totalPages = Math.ceil(totalItems / limit);
+    const res = {
+      items,
+      meta: {
+        currentPage: page,
+        itemsPerPage: limit,
+        totalItems,
+        totalPages,
+        hasPreviousPage: page > 1,
+        hasNextPage: page < totalPages,
+      },
+    };
+    return res;
+  }
+
+  async getFollowingUsersForUser(
+    userId: string,
+    currentUserId: string,
+    paginationQueryDto: PaginationQueryDto,
+  ) {
+    const { limit = 10, page = 1 } = paginationQueryDto;
+    const skip = (page - 1) * limit;
+    const queryBuilder = this.followRepository
+      .createQueryBuilder('follow')
+      .where('follow.followerId = :userId', { userId })
+      .leftJoin('follow.following', 'following')
+      .addSelect(['following.id', 'following.displayName', 'following.avatar'])
+      .orderBy('follow.createdAt', 'DESC')
+      .skip(skip)
+      .take(limit);
+
+    const [items, totalItems] = await queryBuilder.getManyAndCount();
+    // const transformedItems = items.map((item) => ({
+    //   ...item.following,
+    //   isFollowedByCurrentUser: !!item.currentFollow?.followedByCurrentUserId,
+    // }));
+
     const totalPages = Math.ceil(totalItems / limit);
     const res = {
       items,

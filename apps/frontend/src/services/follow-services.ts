@@ -18,6 +18,10 @@ const followApis = {
     serverWithInterceptors.get<GetUserFollowingResponse>(
       `/follows/following${query}`,
     ),
+  getFollowingForUser: (id: string, query: string) =>
+    serverWithInterceptors.get<GetUserFollowingResponse>(
+      `/follows/users/${id}/following${query}`,
+    ),
 };
 
 export default followApis;

@@ -385,7 +385,8 @@ export class PostsService {
     const queryBuilder = this.postRepository
       .createQueryBuilder('post')
       .leftJoin('post.author', 'author')
-      .andWhere('post.authorId = :_authorId', { _authorId })
+      .where('post.authorId = :_authorId', { _authorId })
+      .andWhere('post.status = :status', { status: PostStatus.PUBLISHED })
       .addSelect(['author.id', 'author.displayName', 'author.avatar'])
       .skip(skip)
       .limit(limit);

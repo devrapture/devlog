@@ -8,6 +8,14 @@ import {
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 
+export interface FollowWithCurrentUser extends Follow {
+  followedByCurrentUserId?: string;
+  currentFollow?: {
+    followedByCurrentUserId?: string;
+    followCount?: string;
+  };
+}
+
 @Entity()
 @Index(['follower', 'following'], {
   unique: true,

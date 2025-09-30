@@ -19,6 +19,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useQueryState } from "nuqs";
 import pluralize from "pluralize";
 import { useEffect } from "react";
+import FollowingList from "./components/following-list";
 
 const UserProfilePage = () => {
   const router = useRouter();
@@ -180,7 +181,7 @@ const UserProfilePage = () => {
                 ) : (
                   <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                     {posts?.data?.items?.map((post) => (
-                      <PostCard key={post.id} post={post} showAuthor={false} />
+                      <PostCard key={post?.id} post={post} showAuthor />
                     ))}
                   </div>
                 )}
@@ -192,7 +193,7 @@ const UserProfilePage = () => {
             </TabsContent>
 
             <TabsContent value="following" className="mt-6">
-              {/* <FollowingList /> */}
+              <FollowingList />
             </TabsContent>
           </Tabs>
         </div>

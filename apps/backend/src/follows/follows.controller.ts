@@ -10,7 +10,10 @@ import {
 } from '@nestjs/common';
 import { GetUser } from 'src/auth/decorator/user.decorator';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
-import { ApiAuthenticatedEndpoint } from 'src/common/decorators/api-responses.decorator';
+import {
+  ApiAuthenticatedEndpoint,
+  ApiUnAuthenticatedEndpoint,
+} from 'src/common/decorators/api-responses.decorator';
 import { ResponseMessage } from 'src/common/decorators/response-message.decorator';
 import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 import { SuccessResponseDto } from 'src/common/dto/responses/success-response.dto';
@@ -71,5 +74,24 @@ export class FollowsController {
     @Query() paginationQueryDto: PaginationQueryDto,
   ) {
     return this.followsService.getFollowers(userId, paginationQueryDto);
+  }
+
+  @Get('users/:userId/following')
+  @UseGuards(JwtAuthGuard)
+  @ApiUnAuthenticatedEndpoint(
+    'Get following users for a user',
+    200,
+    AllFollowingResponseDtoWithPagination,
+  )
+  getFollowingUsersForUser(
+    @GetUser('id') currentUserId: string,
+    @Param('userId', ParseUUIDPipe) userId: string,
+    @Query() paginationQueryDto: PaginationQueryDto,
+  ) {
+    return this.followsService.getFollowingUsersForUser(
+      userId,
+      currentUserId,
+      paginationQueryDto,
+    );
   }
 }
